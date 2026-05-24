@@ -1,0 +1,10 @@
+services:
+  db-dev:
+    image: postgres:16
+    container_name: triplana-dev
+    environment:
+      POSTGRES_DB: triplana_dev
+      POSTGRES_USER: triplana_user
+      POSTGRES_PASSWORD: triplana_pass
+    ports:
+      - "5432:5432"
