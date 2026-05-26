@@ -1,7 +1,7 @@
 package com.triplana.backend.entity;
 
-import java.sql.Time;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,10 +29,10 @@ public class Activity {
     private String description;
 
     @Column(name = "start_time")
-    private Time startTime;
+    private LocalTime startTime;
 
     @Column(name = "end_time")
-    private Time endTime;
+    private LocalTime endTime;
 
     @Column(name = "location_name", length = 255)
     private String locationName;
