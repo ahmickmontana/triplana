@@ -32,7 +32,7 @@ public class Token {
     private LocalDateTime expiresAt;
 
     @Column(nullable = false)
-    private Boolean used;
+    private boolean used;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
