@@ -37,7 +37,7 @@ public class AuthValidator {
         Token token = tokenRepository.findByTokenHash(tokenHash)
             .orElseThrow(() -> new AuthException("Token is invalid."));
 
-        if (!token.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new AuthException("Token is expired.");
         }
 
