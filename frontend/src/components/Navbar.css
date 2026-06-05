@@ -1,0 +1,67 @@
+.navbar {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background-color: #1E293B;
+    height: 100px;
+    width: 100%;
+    z-index: 100;
+}
+
+.navbar-logo {
+    color: #F59E0B;
+    font-size: 3rem;
+    font-weight: bold;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.navbar-profile-btn {
+    background-color: #4a90e2;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}
+
+.account-btn {
+    display: flex;
+    gap: 2rem;
+}
+
+.navbar-login-btn {
+    background-color: white;
+    color: black;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.25rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}
+
+.navbar-login-btn:hover {
+    background-color: #E2E8F0;
+}
+
+.navbar-register-btn {
+    background-color: #3B82F6;
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.25rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}
+
+.navbar-register-btn:hover {
+    background-color: #2563EB;
+}
+
+.navbar-login-btn, .navbar-register-btn {
+    width: 120px;
+    height: 60px;
+}
