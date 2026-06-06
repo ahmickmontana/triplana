@@ -69,6 +69,10 @@
     width: fit-content;
 }
 
+.description-btn:hover {
+    background-color: #2563EB;
+}
+
 .description-img {
     flex: 1;
 }
@@ -178,6 +182,10 @@
     border: none;
     cursor: pointer;
     width: fit-content;
+}
+
+.get-started-btn:hover {
+    background-color: #2563EB;
 }
 
 .footer {
