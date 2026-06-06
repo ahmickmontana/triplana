@@ -9,7 +9,7 @@
     background-image: url('../../../assets/images/auth-background.jpg');
     background-size: cover;
     background-position: center;
-    opacity: 0.3;
+    opacity: 0.2;
     z-index: 0;
 }
 
@@ -20,5 +20,204 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
+    min-height: 100vh;
+}
+
+.description {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 80%;
+    gap: 4rem;
+    min-height: 100vh;
+}
+
+.description-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+    flex: 1;
+}
+
+.description-title {
+    color: black;
+    font-size: 5rem;
+    line-height: 1.1;
+    font-weight: bold;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.description-paragraph {
+    color: #666666;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 400;
+    font-size: 1.25rem;
+    line-height: 1.6;
+    max-width: 500px;
+}
+
+.description-btn {
+    background-color: #3B82F6;
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    width: fit-content;
+}
+
+.description-img {
+    flex: 1;
+}
+
+.description-img img {
+    width: 100%;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.key-features {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    min-height: 100vh;
+    gap: 5rem;
+}
+
+.features-title {
+    color: black;
+    font-size: 4rem;
+    line-height: 1.1;
+    font-weight: bold;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.features {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    width: 100%;
+    column-gap: 7.5rem;
+}
+
+.feature {
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    align-items: center;
+    width: 500px;
+}
+
+.key-features img {
+    width: 500px;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.feature-title {
+    margin-top: 0.5rem;
+    color: black;
+    line-height: 1.1;
+    font-size: 1.5rem;
+    font-weight: bold;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.feature-description {
+    margin: 0;
+    color: #666666;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 400;
+    font-size: 1.25rem;
+    line-height: 1.6;
+    max-width: 500px;
+}
+
+.get-started {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    min-height: 75vh;
+    background-color: #F59E0B;
+    gap: 5rem;
+}
+
+.get-started-title {
+    color: black;
+    font-size: 5rem;
+    line-height: 1.2;
+    font-weight: bold;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.get-started-description {
+    color: #666666;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 400;
+    font-size: 2rem;
+    line-height: 1.4;
+}
+
+.get-started-btn {
+    background-color: #3B82F6;
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    width: fit-content;
+}
+
+.footer {
+    display: flex;
+    justify-content: center;
+    align-items: left;
+    flex-direction: column;
+    width: 100%;
+    min-height: 20vh;
+    background-color: #1E293B;
+    padding-left: 5rem;
+}
+
+.footer-main {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem
+}
+
+.footer-title {
+    color: #F59E0B;
+    font-size: 1.3rem;
+    font-weight: bold;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.footer-subtitle {
+    color: #F59E0B;
+    font-size: 1.2rem;
+    font-weight: bold;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.footer-content {
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+}
+
+.footer-copyright {
+    margin-top: 2rem;
 }
