@@ -1,7 +1,7 @@
 import '../auth/css/VerifyEmailPage.css';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { verifyEmail } from '../../api/authApi';
+import { verifyEmail, resendVerification } from '../../api/authApi';
 import LoadingButton from '../../components/LoadingButton';
 
 export default function VerifyEmailPage() {

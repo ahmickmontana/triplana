@@ -13,14 +13,17 @@ public class RegisterRequest {
 
 
     @NotBlank(message = "Email cannot be empty")
-    @Email(message = "Email must be in the format example@gmail.com")
+    @Pattern(
+        regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+        message = "Email must be in format example@email.com"
+    )
     private String email;
 
 
     @NotBlank(message = "Password cannot be empty")
     @Pattern(
-        regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
-        message = "Password must be at least 8 characters long and contain at least one uppercase letter, one digit, and one special character"
+        regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$",
+        message = "'Password must be 8 characters long, have at least one capital letter, a digit and a symbol."
     )
     private String password;
 

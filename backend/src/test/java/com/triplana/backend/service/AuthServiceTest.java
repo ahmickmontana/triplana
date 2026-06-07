@@ -126,7 +126,7 @@ public class AuthServiceTest {
 
     @Test
     void register_whenEmailTaken_throwsAuthException() {
-        doThrow(new AuthException("email", "Email is already taken."))
+        doThrow(new AuthException("email", "An account already exists under this email."))
             .when(authValidator).validateEmailNotTaken("taken@email.com");
 
         request.setEmail("taken@email.com");
@@ -134,7 +134,7 @@ public class AuthServiceTest {
         AuthException exception = assertThrows(AuthException.class, () ->
             authService.register(request));
 
-        assertEquals("Email is already taken.", exception.getMessage());
+        assertEquals("An account already exists under this email.", exception.getMessage());
     }
 
 
@@ -187,7 +187,7 @@ public class AuthServiceTest {
 
     @Test
     void resendVerification_whenUserExistsAndNotVerified_verificationResent() {
-        when(userRepository.findByEmail("valid@email.com")).thenReturn(Optional.of(mockUser));
+        when(userRepository.findByEmailIgnoreCase("valid@email.com")).thenReturn(Optional.of(mockUser));
         when(tokenUtil.generateToken()).thenReturn("rawToken");
         when(tokenUtil.hashToken("rawToken")).thenReturn("hashedToken");
 
@@ -204,7 +204,7 @@ public class AuthServiceTest {
 
     @Test
     void resendVerification_whenUserNotFound_throwsAuthException() {
-        when(userRepository.findByEmail("valid@email.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase("valid@email.com")).thenReturn(Optional.empty());
 
         assertThrows(AuthException.class, () ->
             authService.resendVerification(new ResendVerificationRequest() {{
@@ -216,7 +216,7 @@ public class AuthServiceTest {
     @Test
     void resendVerification_whenUserAlreadyVerified_throwsAuthException() {
         mockUser.setVerified(true);
-        when(userRepository.findByEmail("valid@email.com")).thenReturn(Optional.of(mockUser));
+        when(userRepository.findByEmailIgnoreCase("valid@email.com")).thenReturn(Optional.of(mockUser));
 
         assertThrows(AuthException.class, () ->
             authService.resendVerification(new ResendVerificationRequest() {{
@@ -232,7 +232,7 @@ public class AuthServiceTest {
     void login_whenCredentialsValidAndVerified_returnsSuccessResponse() {
         mockUser.setVerified(true);
 
-        when(userRepository.findByEmail("valid@email.com")).thenReturn(Optional.of(mockUser));
+        when(userRepository.findByEmailIgnoreCase("valid@email.com")).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches("ValidPassword1!", "hashedPassword")).thenReturn(true);
 
         LoginRequest loginRequest = new LoginRequest();
@@ -248,7 +248,7 @@ public class AuthServiceTest {
 
     @Test
     void login_whenUserNotFound_throwsAuthException() {
-        when(userRepository.findByEmail("valid@email.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase("valid@email.com")).thenReturn(Optional.empty());
 
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setEmail("valid@email.com");
@@ -260,7 +260,7 @@ public class AuthServiceTest {
 
     @Test
     void login_whenPasswordIncorrect_throwsAuthException() {
-        when(userRepository.findByEmail("valid@email.com")).thenReturn(Optional.of(mockUser));
+        when(userRepository.findByEmailIgnoreCase("valid@email.com")).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches("ValidPassword1!", "hashedPassword")).thenReturn(false);
 
         LoginRequest loginRequest = new LoginRequest();
@@ -273,7 +273,7 @@ public class AuthServiceTest {
 
     @Test
     void login_whenUserUnverifiedWithValidToken_returnsUnverifiedResponse() {
-        when(userRepository.findByEmail("valid@email.com")).thenReturn(Optional.of(mockUser));
+        when(userRepository.findByEmailIgnoreCase("valid@email.com")).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches("ValidPassword1!", "hashedPassword")).thenReturn(true);
         when(tokenRepository.findByUserAndType(mockUser, TokenType.VERIFICATION))
             .thenReturn(Optional.of(mockToken));
@@ -289,7 +289,7 @@ public class AuthServiceTest {
 
     @Test
     void login_whenUserUnverifiedWithNoValidToken_sendsNewVerificationEmail() {
-        when(userRepository.findByEmail("valid@email.com")).thenReturn(Optional.of(mockUser));
+        when(userRepository.findByEmailIgnoreCase("valid@email.com")).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches("ValidPassword1!", "hashedPassword")).thenReturn(true);
         when(tokenRepository.findByUserAndType(mockUser, TokenType.VERIFICATION))
             .thenReturn(Optional.empty());
@@ -319,7 +319,7 @@ public class AuthServiceTest {
     // forgotPassword()
     @Test
     void forgotPassword_whenEmailNotFound_doesNotSendEmail() {
-        when(userRepository.findByEmail("valid@email.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase("valid@email.com")).thenReturn(Optional.empty());
 
         ForgotPasswordRequest forgotRequest = new ForgotPasswordRequest();
         forgotRequest.setEmail("valid@email.com");
@@ -331,7 +331,7 @@ public class AuthServiceTest {
 
     @Test
     void forgotPassword_whenEmailExists_sendsResetEmail() {
-        when(userRepository.findByEmail("valid@email.com")).thenReturn(Optional.of(mockUser));
+        when(userRepository.findByEmailIgnoreCase("valid@email.com")).thenReturn(Optional.of(mockUser));
         when(tokenUtil.generateToken()).thenReturn("rawToken");
         when(tokenUtil.hashToken("rawToken")).thenReturn("hashedToken");
 

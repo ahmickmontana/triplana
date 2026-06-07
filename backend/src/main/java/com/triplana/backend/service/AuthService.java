@@ -91,7 +91,7 @@ public class AuthService {
     }
 
     public void resendVerification(ResendVerificationRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmailIgnoreCase(request.getEmail())
             .orElseThrow(() -> new AuthException("email", "An account does not exist for this email."));
         
         if (user.isVerified()) {
@@ -118,7 +118,7 @@ public class AuthService {
 
 
     public LoginResponse login(LoginRequest request, HttpSession session) {
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmailIgnoreCase(request.getEmail())
             .orElseThrow(() -> new AuthException("Email or password is invalid."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
@@ -171,7 +171,7 @@ public class AuthService {
      * @param request the forgot password request containing the email
      */
     public void forgotPassword(ForgotPasswordRequest request) {
-        Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
+        Optional<User> optionalUser = userRepository.findByEmailIgnoreCase(request.getEmail());
 
         if (optionalUser.isEmpty()) {
             return;
