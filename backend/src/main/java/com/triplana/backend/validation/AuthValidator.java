@@ -35,10 +35,10 @@ public class AuthValidator {
 
     public Token validateTokenValid(String tokenHash) {
         Token token = tokenRepository.findByTokenHash(tokenHash)
-            .orElseThrow(() -> new AuthException("Token is invalid."));
+            .orElseThrow(() -> new AuthException("This verification link is invalid."));
 
         if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new AuthException("Token is expired.");
+            throw new AuthException("Your verification link is expired.");
         }
 
         return token;

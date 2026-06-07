@@ -1,8 +1,9 @@
 import '../auth/css/LoginPage.css';
 import { login } from '../../api/authApi.js'
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import LoadingButton from '../../components/LoadingButton';
 
 
 export default function LoginPage() {
@@ -12,10 +13,14 @@ export default function LoginPage() {
     const [errors, setErrors] = useState({});
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const location = useLocation();
+    const successMessage = location.state?.message;
+    const [loading, setLoading] = useState(false);
 
     const { login: setUser } = useAuth();
 
     const handleSubmit = async () => {
+        setLoading(true);
         setErrors({});
 
         try {
@@ -23,17 +28,16 @@ export default function LoginPage() {
             const data = response.data;
 
             if (data.status === 'success') {
-                console.log("hello it succeed.")
                 setUser(data.user);
             } else if (data.status === 'unverified') {
-                console.log("hello check email.")
                 navigate('/check-email');
             }
         } catch (error) {
-            console.log(error.response?.data);
             if (error.response?.data) {
                 setErrors(error.response.data);
             }
+        } finally {
+            setLoading(false);
         }
     }
     
@@ -51,7 +55,9 @@ export default function LoginPage() {
                     Plan Your Trips Smarter.
                 </p>
 
-                <h2 className="form-title">
+                {successMessage && <p className="success-banner">{successMessage}</p>}
+
+                <h2 className={`form-title ${successMessage ? 'form-title-no-margin' : 'form-title-margin'}`}>
                     Login
                 </h2>
 
@@ -93,9 +99,13 @@ export default function LoginPage() {
                         Forgot password?
                     </a>
 
-                    <button className="login-btn" onClick={handleSubmit}>
-                        Log in
-                    </button>
+                    <LoadingButton 
+                        onClick={handleSubmit} 
+                        className="login-btn" 
+                        disabled={loading}
+                    >
+                        Log In
+                    </LoadingButton>
                 </div>
                 
             </div>

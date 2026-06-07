@@ -100,7 +100,7 @@ public class AuthValidatorTest {
         AuthException exception = assertThrows(AuthException.class, () ->
             authValidator.validateTokenValid("notValidToken"));
 
-        assertEquals("Token is invalid.", exception.getMessage());
+        assertEquals("This verification link is invalid.", exception.getMessage());
     }
 
     @Test
@@ -111,6 +111,6 @@ public class AuthValidatorTest {
         AuthException exception = assertThrows(AuthException.class, () ->
             authValidator.validateTokenValid("expiredToken"));
 
-        assertEquals("Token is expired.", exception.getMessage());
+        assertEquals("Your verification link is expired.", exception.getMessage());
     }
 }

@@ -95,7 +95,7 @@ public class AuthService {
             .orElseThrow(() -> new AuthException("email", "An account does not exist for this email."));
         
         if (user.isVerified()) {
-            throw new AuthException("email", "This account is already verified.");
+            throw new AuthException("email", "Account is already verified.");
         }
 
         tokenRepository.deleteAllByUserAndType(user, TokenType.VERIFICATION);
