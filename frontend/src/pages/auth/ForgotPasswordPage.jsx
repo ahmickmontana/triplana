@@ -1,4 +1,4 @@
-import '../auth/css/ForgotPassword.css';
+import '../auth/css/ForgotPasswordPage.css';
 import { forgotPassword } from '../../api/authApi.js'
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';

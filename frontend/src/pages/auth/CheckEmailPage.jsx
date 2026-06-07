@@ -1,4 +1,4 @@
-import '../auth/css/CheckEmail.css';
+import '../auth/css/CheckEmailPage.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { resendVerification } from '../../api/authApi';
 import { useState } from 'react';

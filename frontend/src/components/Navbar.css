@@ -17,6 +17,11 @@
     font-family: 'Montserrat', sans-serif;
 }
 
+.navbar-actions {
+    display: flex;
+    gap: 1rem;
+}
+
 .navbar-profile-btn {
     background-color: #4a90e2;
     color: white;
@@ -61,7 +66,23 @@
     background-color: #2563EB;
 }
 
-.navbar-login-btn, .navbar-register-btn {
+.navbar-logout-btn {
+    background-color: #FC0303;
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.25rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}
+
+.navbar-logout-btn:hover {
+    background-color: #910101;
+}
+
+.navbar-login-btn, .navbar-register-btn .navbar-logout-btn {
     width: 120px;
     height: 60px;
 }
+

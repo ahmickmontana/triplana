@@ -16,6 +16,10 @@ import com.triplana.backend.dto.request.ResendVerificationRequest;
 import com.triplana.backend.dto.request.ResetPasswordRequest;
 import com.triplana.backend.dto.response.ApiResponse;
 import com.triplana.backend.dto.response.LoginResponse;
+import com.triplana.backend.dto.response.UserResponse;
+import com.triplana.backend.entity.User;
+import com.triplana.backend.exception.AuthException;
+import com.triplana.backend.repository.UserRepository;
 import com.triplana.backend.service.AuthService;
 
 import jakarta.servlet.http.HttpSession;
@@ -28,6 +32,8 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
     
     private final AuthService authService;
+
+    private final UserRepository userRepository;
 
 
     /**
@@ -124,5 +130,16 @@ public class AuthController {
     public ResponseEntity<ApiResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         authService.resetPassword(request);
         return ResponseEntity.ok(new ApiResponse(true, "Password has been successfully reset. Please log in with your new password."));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me(HttpSession session) {
+        Long userId = (Long) session.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new AuthException("User not found."));
+        return ResponseEntity.ok(UserResponse.from(user));
     }
 }

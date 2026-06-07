@@ -1,27 +1,26 @@
-import './Navbar.css';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom'
+import './Navbar.css';
 
-export default function Navbar() {
-    const { currentUser, logout } = useAuth();
+export default function Navbar({ showLogout, onLogout }) {
+    const { currentUser } = useAuth();
     const navigate = useNavigate();
 
     return (
         <nav className="navbar">
             <span className="navbar-logo">Triplana.</span>
-            {currentUser && (
-                <button className="navbar-profile-btn">
-                    Profile
-                </button>
-            )}
-            {logout && (
-                <div className="account-btn">
-                    <button className="navbar-login-btn" onClick={() => navigate('/login')}> Log in </button>
-                    <button className="navbar-register-btn" onClick={() => navigate('/register')}> Register </button>
-                </div>
-            )}
-            
-            
+            <div className="navbar-actions">
+                {showLogout ? (
+                    <button className="navbar-logout-btn" onClick={onLogout}>
+                        Log Out
+                    </button>
+                ) : (
+                    <>
+                        <button className="navbar-login-btn" onClick={() => navigate('/login')}>Log in</button>
+                        <button className="navbar-register-btn" onClick={() => navigate('/register')}>Register</button>
+                    </>
+                )}
+            </div>
         </nav>
     );
 }
