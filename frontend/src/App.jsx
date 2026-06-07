@@ -8,6 +8,7 @@ import VerifyEmailPage from './pages/auth/VerifyEmailPage';
 import CheckEmailPage from './pages/auth/CheckEmailPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import DashboardPage from './pages/menu/DashboardPage';
 
 function ProtectedRoute({ children }) {
     const { currentUser } = useAuth();
@@ -26,6 +27,8 @@ function App() {
                 <Route path="/check-email" element={<CheckEmailPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+                <Route path="/dashboard" element={<DashboardPage />} />
 
                 {/* Default redirect */}
                 <Route path="*" element={<Navigate to="/login" />} />

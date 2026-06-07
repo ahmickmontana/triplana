@@ -1,4 +1,4 @@
-.login-page {
+.register-page {
     min-height: 90vh;
     position: relative;
     display: flex;
@@ -7,7 +7,7 @@
     align-items: center;
 }
 
-.login-bg {
+.register-bg {
     position: fixed;
     inset: 0;
     background-image: url('../../../assets/images/auth-background.jpg');
@@ -17,7 +17,7 @@
     z-index: 0;
 }
 
-.back-btn, .page-title, .page-subtitle, .form-title, .login-form {
+.back-btn, .page-title, .page-subtitle, .form-title, .register-form {
     position: relative;
     z-index: 1;
 }
@@ -48,7 +48,7 @@
     margin-bottom: 2.5rem;
 }
 
-.login-form {
+.register-form {
     display: flex;
     flex-direction: column;
     justify-content: center;

@@ -1,4 +1,4 @@
-import '../auth/css/CheckEmailPage.css';
+import '../auth/css/CheckEmail.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { resendVerification } from '../../api/authApi';
 import { useState } from 'react';
@@ -26,8 +26,10 @@ export default function CheckEmailPage() {
         <div className="check-email-page">
             <div className="check-email-bg" />
             <div className="check-email-content">
-                <h1 className="page-title">Triplana.</h1>
-                <p className="page-subtitle">Plan Your Trips Smarter.</p>
+                <div class="check-email-text">
+                    <h1 className="page-title">Triplana.</h1>
+                    <p className="page-subtitle">Plan Your Trips Smarter.</p>
+                </div>
                 <div className="check-email-text">
                     <h2 className="form-title">Check Your Email!</h2>
                     <p className="check-email-message">

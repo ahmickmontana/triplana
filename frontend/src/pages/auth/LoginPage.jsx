@@ -8,7 +8,6 @@ import LoadingButton from '../../components/LoadingButton';
 
 export default function LoginPage() {
     const navigate = useNavigate();
-    const [username, setUsername] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState({});
     const [email, setEmail] = useState('');
@@ -29,6 +28,7 @@ export default function LoginPage() {
 
             if (data.status === 'success') {
                 setUser(data.user);
+                navigate('/dashboard');
             } else if (data.status === 'unverified') {
                 navigate('/check-email');
             }

@@ -17,8 +17,6 @@ export default function RegisterPage() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { login: setUser } = useAuth();
-
     const handleSubmit = async () => {
         setLoading(true);
         setErrors({});
@@ -40,8 +38,8 @@ export default function RegisterPage() {
             <button className="back-btn" onClick={() => navigate('/')}>
                     ⇦ Back
             </button>
-            <div className="login-page">
-                <div className="login-bg" />
+            <div className="register-page">
+                <div className="register-bg" />
                 <h1 className="page-title">
                     Triplana.
                 </h1>
@@ -53,7 +51,7 @@ export default function RegisterPage() {
                     Register
                 </h2>
 
-                <div className="login-form">
+                <div className="register-form">
                     <div className="form-element">
                         <label className="input-label">Username</label>
                         <input

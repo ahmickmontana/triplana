@@ -113,7 +113,7 @@ export default function LandingPage() {
                         Powered by Google Maps.
                     </p>
                     <p class="footer-content footer-copyright">
-                        © Ahmick Montana
+                        © Ahmick Montana. 2026.
                     </p>
                 </footer>
             </div>
