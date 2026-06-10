@@ -9,6 +9,7 @@ import CheckEmailPage from './pages/auth/CheckEmailPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DashboardPage from './pages/menu/DashboardPage';
+import EditProfilePage from './pages/auth/EditProfilePage';
 
 function ProtectedRoute({ children }) {
     const { currentUser } = useAuth();
@@ -29,6 +30,8 @@ function App() {
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                 <Route path="/dashboard" element={<DashboardPage />} />
+
+                <Route path="/edit-profile" element={<EditProfilePage/>} />
 
                 {/* Default redirect */}
                 <Route path="*" element={<Navigate to="/login" />} />
