@@ -28,7 +28,7 @@ export default function LoginPage() {
 
             if (data.status === 'success') {
                 setUser(data.user);
-                navigate('/dashboard');
+                navigate('/trips');
             } else if (data.status === 'unverified') {
                 navigate('/check-email');
             }
@@ -66,6 +66,7 @@ export default function LoginPage() {
                         <label className="input-label">Email</label>
                         <input
                             type="text"
+                            maxLength={255}
                             placeholder="example@email.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}

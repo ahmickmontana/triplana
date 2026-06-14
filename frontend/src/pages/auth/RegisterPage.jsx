@@ -56,6 +56,7 @@ export default function RegisterPage() {
                         <label className="input-label">Username</label>
                         <input
                             type="text"
+                            maxLength={50}
                             placeholder="John Doe"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
@@ -68,6 +69,7 @@ export default function RegisterPage() {
                         <label className="input-label">Email</label>
                         <input
                             type="text"
+                            maxLength={255}
                             placeholder="example@email.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}

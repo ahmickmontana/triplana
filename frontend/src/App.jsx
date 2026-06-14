@@ -8,7 +8,7 @@ import VerifyEmailPage from './pages/auth/VerifyEmailPage';
 import CheckEmailPage from './pages/auth/CheckEmailPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
-import DashboardPage from './pages/menu/DashboardPage';
+import TripsPage from './pages/menu/TripsPage';
 import EditProfilePage from './pages/auth/EditProfilePage';
 
 function ProtectedRoute({ children }) {
@@ -29,7 +29,7 @@ function App() {
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/trips" element={<TripsPage />} />
 
                 <Route path="/edit-profile" element={<EditProfilePage/>} />
 

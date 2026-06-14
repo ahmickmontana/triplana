@@ -5,10 +5,20 @@ import featureOne from '../assets/images/f1.jpg';
 import featureTwo from '../assets/images/f2.jpg';
 import featureThree from '../assets/images/f3.jpg';
 import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 
 export default function LandingPage() {
+    const { currentUser, loading } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!loading && currentUser) {
+            navigate('/trips');
+        }
+    }, [currentUser, loading]);
+    
     return (
         <div className="landing-page">
             <div className="landing-bg" />

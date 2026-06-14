@@ -17,6 +17,7 @@ export default function EditProfilePage() {
     const [loading, setLoading] = useState(false);
 
     const handleSave = async () => {
+        setPasswordSuccess(false);
         setLoading(true);
         setErrors({});
         setSaveSuccess(false);
@@ -35,11 +36,15 @@ export default function EditProfilePage() {
     };
 
     const handleChangePassword = async () => {
+        setLoading(true);
+        setSaveSuccess(false);
         try {
             await forgotPassword({ email: currentUser.email });
             setPasswordSuccess(true);
         } catch (error) {
             console.log(error);
+        } finally {
+            setLoading(false);
         }
     };
     
@@ -69,6 +74,7 @@ export default function EditProfilePage() {
                         <div className="username-field">
                             <input
                                 type="text"
+                                maxLength={255}
                                 placeholder="John Doe"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
