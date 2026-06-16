@@ -11,12 +11,15 @@ import com.triplana.backend.dto.request.LoginRequest;
 import com.triplana.backend.dto.request.RegisterRequest;
 import com.triplana.backend.dto.request.ResendVerificationRequest;
 import com.triplana.backend.dto.request.ResetPasswordRequest;
+import com.triplana.backend.dto.request.SubmitEmailChangeRequest;
 import com.triplana.backend.dto.response.LoginResponse;
 import com.triplana.backend.dto.response.UserResponse;
+import com.triplana.backend.entity.EmailChangeRequest;
 import com.triplana.backend.entity.Token;
 import com.triplana.backend.entity.TokenType;
 import com.triplana.backend.entity.User;
 import com.triplana.backend.exception.AuthException;
+import com.triplana.backend.repository.EmailChangeRequestRepository;
 import com.triplana.backend.repository.TokenRepository;
 import com.triplana.backend.repository.UserRepository;
 import com.triplana.backend.validation.AuthValidator;
@@ -34,6 +37,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
+    private final EmailChangeRequestRepository emailChangeRequestRepository;
     private final AuthValidator authValidator;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
@@ -223,5 +227,85 @@ public class AuthService {
 
         userRepository.save(user);
         tokenRepository.save(token);
+    }
+
+
+    public void initiateEmailChange(Long userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+
+        if (optionalUser.isEmpty()) {
+            return;
+        }
+
+        User user = optionalUser.get();
+
+        emailChangeRequestRepository.deleteByUserId(userId);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest emailChangeRequest = EmailChangeRequest.builder()
+            .user(user)
+            .expiresAt(LocalDateTime.now().plusDays(1))
+            .newEmail(null)
+            .verificationTokenHash(hashedToken)
+            .confirmationTokenHash(null)
+            .build();
+
+        emailChangeRequestRepository.save(emailChangeRequest);
+
+        emailService.sendEmailChangeVerification(user.getEmail(), rawToken);
+    }
+
+    public void submitNewEmail(SubmitEmailChangeRequest request) {
+        String hashedToken = tokenUtil.hashToken(request.getToken());
+
+        EmailChangeRequest emailChangeRequest = emailChangeRequestRepository
+            .findByVerificationTokenHash(hashedToken)
+            .orElseThrow(() -> new AuthException("This link is invalid or expired."));
+
+        if (!emailChangeRequest.getExpiresAt().isAfter(LocalDateTime.now())) {
+            throw new AuthException("This link is invalid or expired.");
+        }
+
+        User user = emailChangeRequest.getUser();
+
+        // validate password
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new AuthException("password", "Current password is incorrect.");
+        }
+
+        // validate new email
+        authValidator.validateEmailNotTaken(request.getNewEmail());
+
+        // update the emailchangerequest with the newemail and confirmationtokenhash
+        String rawConfirmToken = tokenUtil.generateToken();
+        String hashedConfirmToken = tokenUtil.hashToken(rawConfirmToken);
+
+        emailChangeRequest.setNewEmail(request.getNewEmail());
+        emailChangeRequest.setConfirmationTokenHash(hashedConfirmToken);
+        emailChangeRequestRepository.save(emailChangeRequest);
+
+        // send confirmation to new email
+        emailService.sendEmailChangeConfirmation(request.getNewEmail(), rawConfirmToken);
+    }
+
+    public void confirmEmailChange(String rawToken) {
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest emailChangeRequest = emailChangeRequestRepository
+            .findByConfirmationTokenHash(hashedToken)
+            .orElseThrow(() -> new AuthException("This link is invalid or expired."));
+
+        if (!emailChangeRequest.getExpiresAt().isAfter(LocalDateTime.now())) {
+            throw new AuthException("This link is invalid or expired.");
+        }
+
+        User user = emailChangeRequest.getUser();
+
+        user.setEmail(emailChangeRequest.getNewEmail());
+        userRepository.save(user);
+
+        emailChangeRequestRepository.delete(emailChangeRequest);
     }
 }

@@ -45,4 +45,30 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendEmailChangeVerification(String toEmail, String token) {
+        String link = baseUrl + "/change-email/verify?token=" + token;
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("Changing your Triplana email address");
+        message.setText("Click the link below to change your email address:\n\n" + link
+            + "\n\n This link expires in 24 hours.\n\nIf you did not request this, ignore this email.");
+
+        mailSender.send(message);
+    }
+
+    public void sendEmailChangeConfirmation(String toEmail, String token) {
+        String link = baseUrl + "/change-email/confirm?token=" + token;
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("Confirming your new Triplana email address");
+        message.setText("Click the link below to confirm your new email address:\n\n" + link
+            + "\n\n This link expires in 24 hours.\n\nIf you did not request this, ignore this email.");
+
+        mailSender.send(message);
+    }
 }
