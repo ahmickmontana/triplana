@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import LoadingButton from '../../components/LoadingButton';
-import { forgotPassword } from '../../api/authApi';
+import { forgotPassword, initiateChangeEmail } from '../../api/authApi';
 
 export default function EditProfilePage() {
     const { currentUser, login: updateUser } = useAuth();
@@ -14,13 +14,15 @@ export default function EditProfilePage() {
     const [errors, setErrors] = useState({});
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [passwordSuccess, setPasswordSuccess] = useState(false);
+    const [initiateChangeEmailSuccess, setInitiateChangeEmailSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const handleSave = async () => {
-        setPasswordSuccess(false);
         setLoading(true);
         setErrors({});
         setSaveSuccess(false);
+        setPasswordSuccess(false);
+        setInitiateChangeEmailSuccess(false);
 
         try {
             const response = await updateProfile({ username });
@@ -35,9 +37,26 @@ export default function EditProfilePage() {
         }
     };
 
+    const handleChangeEmail = async () => {
+        setLoading(true);
+        setSaveSuccess(false);
+        setPasswordSuccess(false);
+        setInitiateChangeEmailSuccess(false);
+        try {
+            await initiateChangeEmail();
+            setInitiateChangeEmailSuccess(true);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleChangePassword = async () => {
         setLoading(true);
         setSaveSuccess(false);
+        setPasswordSuccess(false);
+        setInitiateChangeEmailSuccess(false);
         try {
             await forgotPassword({ email: currentUser.email });
             setPasswordSuccess(true);
@@ -69,12 +88,13 @@ export default function EditProfilePage() {
                 <div className="edit-profile-form">
                     {saveSuccess && <p className="success-banner">Profile updated successfully!</p>}
                     {passwordSuccess && <p className="success-banner">Password reset email sent!</p>}
+                    {initiateChangeEmailSuccess && <p className="success-banner">Change email address email sent!</p>}
                     <div className="form-element">
                         <label className="input-label">Username</label>
                         <div className="username-field">
                             <input
                                 type="text"
-                                maxLength={255}
+                                maxLength={50}
                                 placeholder="John Doe"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
@@ -95,7 +115,7 @@ export default function EditProfilePage() {
                     </div>
 
                     <LoadingButton 
-                        onClick={() => navigate('/change-email')} 
+                        onClick={handleChangeEmail} 
                         className="edit-profile-btn" 
                         disabled={loading}
                     >

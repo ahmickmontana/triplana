@@ -12,4 +12,7 @@ export const verifyEmail = (token) => api.get(`/api/auth/verify?token=${token}`)
 export const resendVerification = (data) => api.post('/api/auth/resend-verification', data);
 export const forgotPassword = (data) => api.post('/api/auth/forgot-password', data);
 export const resetPassword = (data) => api.post('/api/auth/reset-password', data);
+export const initiateChangeEmail = (data) => api.post('/api/auth/change-email/initiate', data);
+export const submitChangeEmail = (data) => api.post('/api/auth/change-email/submit', data);
+export const confirmChangeEmail = (token) => api.get('/api/auth/change-email/confirm', { params: { token } });
 export const getMe = () => api.get('/api/auth/me');

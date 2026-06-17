@@ -48,7 +48,7 @@ public class AuthService {
         authValidator.validatePasswordsMatch(request.getPassword(), request.getConfirmPassword());
 
         // This validates the email entered in the email field has not been taken by another account.
-        authValidator.validateEmailNotTaken(request.getEmail());
+        authValidator.validateEmailNotTaken(request.getEmail(), "email");
 
         // Hashing the password.
         String passwordHashed = passwordEncoder.encode(request.getPassword());
@@ -276,7 +276,7 @@ public class AuthService {
         }
 
         // validate new email
-        authValidator.validateEmailNotTaken(request.getNewEmail());
+        authValidator.validateEmailNotTaken(request.getNewEmail(), "newEmail");
 
         // update the emailchangerequest with the newemail and confirmationtokenhash
         String rawConfirmToken = tokenUtil.generateToken();
@@ -295,10 +295,10 @@ public class AuthService {
 
         EmailChangeRequest emailChangeRequest = emailChangeRequestRepository
             .findByConfirmationTokenHash(hashedToken)
-            .orElseThrow(() -> new AuthException("This link is invalid or expired."));
+            .orElseThrow(() -> new AuthException("This email confirmation link is invalid or expired."));
 
         if (!emailChangeRequest.getExpiresAt().isAfter(LocalDateTime.now())) {
-            throw new AuthException("This link is invalid or expired.");
+            throw new AuthException("This email confirmation link is invalid or expired.");
         }
 
         User user = emailChangeRequest.getUser();

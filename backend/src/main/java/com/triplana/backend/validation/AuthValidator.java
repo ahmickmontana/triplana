@@ -27,9 +27,9 @@ public class AuthValidator {
         };
     }
 
-    public void validateEmailNotTaken(String email) {
+    public void validateEmailNotTaken(String email, String field) {
         if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new AuthException("email", "An account already exists under this email.");
+            throw new AuthException(field, "An account already exists under this email.");
         }
     }
 
