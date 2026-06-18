@@ -68,7 +68,7 @@ public class AuthValidatorTest {
     void validateEmailNotTaken_whenEmailNotTaken_doesNotThrow() {
         when(userRepository.existsByEmailIgnoreCase("new@email.com")).thenReturn(false);
 
-        assertDoesNotThrow(() -> authValidator.validateEmailNotTaken("new@email.com"));
+        assertDoesNotThrow(() -> authValidator.validateEmailNotTaken("new@email.com", "email"));
     }
 
     @Test
@@ -76,7 +76,7 @@ public class AuthValidatorTest {
         when(userRepository.existsByEmailIgnoreCase("taken@email.com")).thenReturn(true);
 
         AuthException exception = assertThrows(AuthException.class, () ->
-            authValidator.validateEmailNotTaken("taken@email.com"));
+            authValidator.validateEmailNotTaken("taken@email.com", "email"));
 
         assertEquals("An account already exists under this email.", exception.getMessage());
     }

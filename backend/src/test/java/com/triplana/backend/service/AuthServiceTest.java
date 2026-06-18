@@ -25,11 +25,14 @@ import com.triplana.backend.dto.request.LoginRequest;
 import com.triplana.backend.dto.request.RegisterRequest;
 import com.triplana.backend.dto.request.ResendVerificationRequest;
 import com.triplana.backend.dto.request.ResetPasswordRequest;
+import com.triplana.backend.dto.request.SubmitEmailChangeRequest;
 import com.triplana.backend.dto.response.LoginResponse;
+import com.triplana.backend.entity.EmailChangeRequest;
 import com.triplana.backend.entity.Token;
 import com.triplana.backend.entity.TokenType;
 import com.triplana.backend.entity.User;
 import com.triplana.backend.exception.AuthException;
+import com.triplana.backend.repository.EmailChangeRequestRepository;
 import com.triplana.backend.repository.TokenRepository;
 import com.triplana.backend.repository.UserRepository;
 import com.triplana.backend.util.TokenUtil;
@@ -62,6 +65,9 @@ public class AuthServiceTest {
     @Mock
     private HttpSession session;
 
+    @Mock
+    private EmailChangeRequestRepository emailChangeRequestRepository;
+
     @InjectMocks
     private AuthService authService;
 
@@ -70,6 +76,8 @@ public class AuthServiceTest {
     private User mockUser;
 
     private Token mockToken;
+
+    private EmailChangeRequest mockEmailChangeRequest;
     
 
     @BeforeEach
@@ -94,6 +102,14 @@ public class AuthServiceTest {
             .expiresAt(LocalDateTime.now().plusHours(24))
             .used(false)
             .user(mockUser)
+            .build();
+
+        mockEmailChangeRequest = EmailChangeRequest.builder()
+            .user(mockUser)
+            .verificationTokenHash("hashedToken")
+            .confirmationTokenHash("hashedConfirmToken")
+            .newEmail("newemail@email.com")
+            .expiresAt(LocalDateTime.now().plusHours(24))
             .build();
     }
 
@@ -127,7 +143,7 @@ public class AuthServiceTest {
     @Test
     void register_whenEmailTaken_throwsAuthException() {
         doThrow(new AuthException("email", "An account already exists under this email."))
-            .when(authValidator).validateEmailNotTaken("taken@email.com");
+            .when(authValidator).validateEmailNotTaken("taken@email.com", "email");
 
         request.setEmail("taken@email.com");
 
@@ -406,5 +422,148 @@ public class AuthServiceTest {
         verify(tokenRepository).save(mockToken);
         assertTrue(mockToken.isUsed());
         assertEquals("newHashedPassword", mockUser.getPasswordHash());
+    }
+
+    // initiateEmailChange()
+
+    @Test
+    void initiateEmailChange_whenUserExists_sendsVerificationEmail() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
+        when(tokenUtil.generateToken()).thenReturn("rawToken");
+        when(tokenUtil.hashToken("rawToken")).thenReturn("hashedToken");
+
+        assertDoesNotThrow(() -> authService.initiateEmailChange(1L));
+
+        verify(emailChangeRequestRepository).deleteByUserId(1L);
+        verify(emailChangeRequestRepository).save(any(EmailChangeRequest.class));
+        verify(emailService).sendEmailChangeVerification(eq(mockUser.getEmail()), eq("rawToken"));
+    }
+
+    @Test
+    void initiateEmailChange_whenUserNotFound_doesNotThrow() {
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertDoesNotThrow(() -> authService.initiateEmailChange(1L));
+
+        verify(emailChangeRequestRepository, never()).save(any());
+        verify(emailService, never()).sendEmailChangeVerification(anyString(), anyString());
+    }
+
+    // submitNewEmail()
+    @Test
+    void submitNewEmail_whenAllValid_sendsConfirmationEmail() {
+        when(tokenUtil.hashToken("rawToken")).thenReturn("hashedToken");
+        when(emailChangeRequestRepository.findByVerificationTokenHash("hashedToken"))
+            .thenReturn(Optional.of(mockEmailChangeRequest));
+        when(passwordEncoder.matches("ValidPassword1!", mockUser.getPasswordHash())).thenReturn(true);
+        when(tokenUtil.generateToken()).thenReturn("rawConfirmToken");
+        when(tokenUtil.hashToken("rawConfirmToken")).thenReturn("hashedConfirmToken");
+
+        SubmitEmailChangeRequest request = new SubmitEmailChangeRequest();
+        request.setToken("rawToken");
+        request.setNewEmail("newemail@email.com");
+        request.setPassword("ValidPassword1!");
+
+        assertDoesNotThrow(() -> authService.submitNewEmail(request));
+
+        verify(emailChangeRequestRepository).save(any(EmailChangeRequest.class));
+        verify(emailService).sendEmailChangeConfirmation(eq("newemail@email.com"), eq("rawConfirmToken"));
+    }
+
+    @Test
+    void submitNewEmail_whenTokenNotFound_throwsAuthException() {
+        when(tokenUtil.hashToken("invalidToken")).thenReturn("hashedInvalidToken");
+        when(emailChangeRequestRepository.findByVerificationTokenHash("hashedInvalidToken"))
+            .thenReturn(Optional.empty());
+
+        SubmitEmailChangeRequest request = new SubmitEmailChangeRequest();
+        request.setToken("invalidToken");
+        request.setNewEmail("newemail@email.com");
+        request.setPassword("ValidPassword1!");
+
+        assertThrows(AuthException.class, () -> authService.submitNewEmail(request));
+    }
+
+    @Test
+    void submitNewEmail_whenTokenExpired_throwsAuthException() {
+        mockEmailChangeRequest.setExpiresAt(LocalDateTime.now().minusHours(1));
+
+        when(tokenUtil.hashToken("rawToken")).thenReturn("hashedToken");
+        when(emailChangeRequestRepository.findByVerificationTokenHash("hashedToken"))
+            .thenReturn(Optional.of(mockEmailChangeRequest));
+
+        SubmitEmailChangeRequest request = new SubmitEmailChangeRequest();
+        request.setToken("rawToken");
+        request.setNewEmail("newemail@email.com");
+        request.setPassword("ValidPassword1!");
+
+        assertThrows(AuthException.class, () -> authService.submitNewEmail(request));
+    }
+
+    @Test
+    void submitNewEmail_whenWrongPassword_throwsAuthException() {
+        when(tokenUtil.hashToken("rawToken")).thenReturn("hashedToken");
+        when(emailChangeRequestRepository.findByVerificationTokenHash("hashedToken"))
+            .thenReturn(Optional.of(mockEmailChangeRequest));
+        when(passwordEncoder.matches("WrongPassword1!", mockUser.getPasswordHash())).thenReturn(false);
+
+        SubmitEmailChangeRequest request = new SubmitEmailChangeRequest();
+        request.setToken("rawToken");
+        request.setNewEmail("newemail@email.com");
+        request.setPassword("WrongPassword1!");
+
+        assertThrows(AuthException.class, () -> authService.submitNewEmail(request));
+    }
+
+    @Test
+    void submitNewEmail_whenEmailAlreadyTaken_throwsAuthException() {
+        when(tokenUtil.hashToken("rawToken")).thenReturn("hashedToken");
+        when(emailChangeRequestRepository.findByVerificationTokenHash("hashedToken"))
+            .thenReturn(Optional.of(mockEmailChangeRequest));
+        when(passwordEncoder.matches("ValidPassword1!", mockUser.getPasswordHash())).thenReturn(true);
+        doThrow(new AuthException("newEmail", "An account already exists under this email."))
+            .when(authValidator).validateEmailNotTaken("newemail@email.com", "newEmail");
+
+        SubmitEmailChangeRequest request = new SubmitEmailChangeRequest();
+        request.setToken("rawToken");
+        request.setNewEmail("newemail@email.com");
+        request.setPassword("ValidPassword1!");
+
+        assertThrows(AuthException.class, () -> authService.submitNewEmail(request));
+    }
+
+    // confirmEmailChange()
+
+    @Test
+    void confirmEmailChange_whenTokenValid_updatesUserEmail() {
+        when(tokenUtil.hashToken("rawConfirmToken")).thenReturn("hashedConfirmToken");
+        when(emailChangeRequestRepository.findByConfirmationTokenHash("hashedConfirmToken"))
+            .thenReturn(Optional.of(mockEmailChangeRequest));
+
+        assertDoesNotThrow(() -> authService.confirmEmailChange("rawConfirmToken"));
+
+        verify(userRepository).save(mockUser);
+        verify(emailChangeRequestRepository).delete(mockEmailChangeRequest);
+        assertEquals("newemail@email.com", mockUser.getEmail());
+    }
+
+    @Test
+    void confirmEmailChange_whenTokenNotFound_throwsAuthException() {
+        when(tokenUtil.hashToken("invalidToken")).thenReturn("hashedInvalidToken");
+        when(emailChangeRequestRepository.findByConfirmationTokenHash("hashedInvalidToken"))
+            .thenReturn(Optional.empty());
+
+        assertThrows(AuthException.class, () -> authService.confirmEmailChange("invalidToken"));
+    }
+
+    @Test
+    void confirmEmailChange_whenTokenExpired_throwsAuthException() {
+        mockEmailChangeRequest.setExpiresAt(LocalDateTime.now().minusHours(1));
+
+        when(tokenUtil.hashToken("rawConfirmToken")).thenReturn("hashedConfirmToken");
+        when(emailChangeRequestRepository.findByConfirmationTokenHash("hashedConfirmToken"))
+            .thenReturn(Optional.of(mockEmailChangeRequest));
+
+        assertThrows(AuthException.class, () -> authService.confirmEmailChange("rawConfirmToken"));
     }
 }
