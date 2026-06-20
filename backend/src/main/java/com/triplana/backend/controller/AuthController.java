@@ -18,7 +18,6 @@ import com.triplana.backend.dto.request.SubmitEmailChangeRequest;
 import com.triplana.backend.dto.response.ApiResponse;
 import com.triplana.backend.dto.response.LoginResponse;
 import com.triplana.backend.dto.response.UserResponse;
-import com.triplana.backend.entity.EmailChangeRequest;
 import com.triplana.backend.entity.User;
 import com.triplana.backend.exception.AuthException;
 import com.triplana.backend.repository.UserRepository;
@@ -149,6 +148,9 @@ public class AuthController {
     @PostMapping("/change-email/initiate")
     public ResponseEntity<ApiResponse> initiateEmailChange(HttpSession session) {
         Long userId = (Long) session.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         authService.initiateEmailChange(userId);
 

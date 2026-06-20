@@ -9,8 +9,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpSession;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -24,7 +22,6 @@ import com.triplana.backend.entity.User;
 import com.triplana.backend.repository.UserRepository;
 
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 
 @SpringBootTest

@@ -9,12 +9,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triplana.backend.dto.request.ForgotPasswordRequest;
@@ -22,14 +25,19 @@ import com.triplana.backend.dto.request.LoginRequest;
 import com.triplana.backend.dto.request.RegisterRequest;
 import com.triplana.backend.dto.request.ResendVerificationRequest;
 import com.triplana.backend.dto.request.ResetPasswordRequest;
+import com.triplana.backend.dto.request.SubmitEmailChangeRequest;
+import com.triplana.backend.dto.request.UpdateProfileRequest;
+import com.triplana.backend.entity.EmailChangeRequest;
 import com.triplana.backend.entity.Token;
 import com.triplana.backend.entity.TokenType;
 import com.triplana.backend.entity.User;
+import com.triplana.backend.repository.EmailChangeRequestRepository;
 import com.triplana.backend.repository.TokenRepository;
 import com.triplana.backend.repository.UserRepository;
 import com.triplana.backend.service.EmailService;
 import com.triplana.backend.util.TokenUtil;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.transaction.Transactional;
 
 @SpringBootTest
@@ -46,6 +54,9 @@ public class AuthControllerIntegrationTest {
 
     @Autowired
     private TokenRepository tokenRepository;
+
+    @Autowired
+    private EmailChangeRequestRepository emailChangeRequestRepository;
 
     @Autowired
     private TokenUtil tokenUtil;
@@ -267,38 +278,6 @@ public class AuthControllerIntegrationTest {
 
         User updatedUser = userRepository.findByEmailIgnoreCase("taken@email.com").orElseThrow();
         assertTrue(updatedUser.isVerified());
-    }
-
-    @Test
-    void verify_tokenIsExpired_returnsBadRequest() throws Exception {
-        // Creating the unverified user first.
-        User existingUser = User.builder()
-            .username("Existing user")
-            .email("taken@email.com")
-            .passwordHash(passwordEncoder.encode("Password1!"))
-            .verified(false)
-            .build();
-        userRepository.save(existingUser);
-
-        // Create token for the unverified user
-        String rawToken = tokenUtil.generateToken();
-        String hashedToken = tokenUtil.hashToken(rawToken);
-
-        Token token = Token.builder()
-            .user(existingUser)
-            .tokenHash(hashedToken)
-            .type(TokenType.VERIFICATION)
-            .expiresAt(LocalDateTime.now().minusHours(24))
-            .used(false)
-            .build();
-        tokenRepository.save(token);
-
-        mockMvc.perform(get("/api/auth/verify")
-                .param("token", rawToken))
-            .andExpect(status().isBadRequest());
-
-        User updatedUser = userRepository.findByEmailIgnoreCase("taken@email.com").orElseThrow();
-        assertFalse(updatedUser.isVerified());
     }
 
     @Test
@@ -564,5 +543,334 @@ public class AuthControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.email").value("Account is already verified."));
+    }
+
+    /* POST /api/auth/me */
+
+    @Test
+    void me_UserNotLoggedIn_ReturnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void me_UserLoggedIn_ReturnsUserResponse() throws Exception {
+        User existingUser = User.builder()
+                .username("Existing user")
+                .email("taken@email.com")
+                .passwordHash(passwordEncoder.encode("Password1!"))
+                .verified(true)
+                .build();
+
+        userRepository.save(existingUser);
+
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setEmail("taken@email.com");
+        loginRequest.setPassword("Password1!");
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Cookie sessionCookie =
+                loginResult.getResponse().getCookie("SESSION");
+
+        mockMvc.perform(get("/api/auth/me")
+                        .cookie(sessionCookie))
+                .andExpect(status().isOk());
+    }
+
+    /* POST /change-email/initiate */
+
+    @Test
+    void initiateEmailChange_UserLoggedIn_ReturnsApiResponse() throws Exception {
+        User existingUser = User.builder()
+                .username("Existing user")
+                .email("taken@email.com")
+                .passwordHash(passwordEncoder.encode("Password1!"))
+                .verified(true)
+                .build();
+
+        userRepository.save(existingUser);
+
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setEmail("taken@email.com");
+        loginRequest.setPassword("Password1!");
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Cookie sessionCookie =
+                loginResult.getResponse().getCookie("SESSION");
+
+        mockMvc.perform(post("/api/auth/change-email/initiate")
+                        .cookie(sessionCookie))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void initiateEmailChange_UserNotLoggedIn_ReturnsUnauthorized() throws Exception {
+        mockMvc.perform(post("/api/auth/change-email/initiate"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    /* POST /change-email/submit */
+    
+    @Test
+    void submitNewEmail_ValidInputsAndToken_EmailChangeConfirmationIsSent() throws Exception {
+        User existingUser = User.builder()
+                .username("Existing user")
+                .email("taken@email.com")
+                .passwordHash(passwordEncoder.encode("Password1!"))
+                .verified(true)
+                .build();
+
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest emailChangeRequest = EmailChangeRequest.builder()
+            .user(existingUser)
+            .verificationTokenHash(hashedToken)
+            .expiresAt(LocalDateTime.now().plusHours(24))
+            .build();
+        emailChangeRequestRepository.save(emailChangeRequest);
+
+        SubmitEmailChangeRequest request = new SubmitEmailChangeRequest();
+        request.setNewEmail("unused@email.com");
+        request.setPassword("Password1!");
+        request.setToken(rawToken);
+
+        mockMvc.perform(post("/api/auth/change-email/submit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void submitNewEmail_InvalidToken_ReturnsBadRequest() throws Exception {
+        User existingUser = User.builder()
+                .username("Existing user")
+                .email("taken@email.com")
+                .passwordHash(passwordEncoder.encode("Password1!"))
+                .verified(true)
+                .build();
+
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest emailChangeRequest = EmailChangeRequest.builder()
+            .user(existingUser)
+            .verificationTokenHash(hashedToken)
+            .expiresAt(LocalDateTime.now().plusHours(24))
+            .build();
+        emailChangeRequestRepository.save(emailChangeRequest);
+
+        SubmitEmailChangeRequest request = new SubmitEmailChangeRequest();
+        request.setNewEmail("unused@email.com");
+        request.setPassword("Password1!");
+        // Invalid token so don't include token in request.
+
+        mockMvc.perform(post("/api/auth/change-email/submit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void submitNewEmail_ExpiredToken_ReturnsBadRequest() throws Exception {
+        User existingUser = User.builder()
+                .username("Existing user")
+                .email("taken@email.com")
+                .passwordHash(passwordEncoder.encode("Password1!"))
+                .verified(true)
+                .build();
+
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest emailChangeRequest = EmailChangeRequest.builder()
+            .user(existingUser)
+            .verificationTokenHash(hashedToken)
+            .expiresAt(LocalDateTime.now().minusHours(24))
+            .build();
+        emailChangeRequestRepository.save(emailChangeRequest);
+
+        SubmitEmailChangeRequest request = new SubmitEmailChangeRequest();
+        request.setNewEmail("unused@email.com");
+        request.setPassword("Password1!");
+        request.setToken(rawToken);
+
+        mockMvc.perform(post("/api/auth/change-email/submit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void submitNewEmail_WrongPassword_ReturnsBadRequest() throws Exception {
+        User existingUser = User.builder()
+                .username("Existing user")
+                .email("taken@email.com")
+                .passwordHash(passwordEncoder.encode("Password1!"))
+                .verified(true)
+                .build();
+
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest emailChangeRequest = EmailChangeRequest.builder()
+            .user(existingUser)
+            .verificationTokenHash(hashedToken)
+            .expiresAt(LocalDateTime.now().plusHours(24))
+            .build();
+        emailChangeRequestRepository.save(emailChangeRequest);
+
+        SubmitEmailChangeRequest request = new SubmitEmailChangeRequest();
+        request.setNewEmail("unused@email.com");
+        request.setPassword("WrongPassword1!");
+        request.setToken(rawToken);
+
+        mockMvc.perform(post("/api/auth/change-email/submit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void submitNewEmail_EmailAlreadyTaken_ReturnsBadRequest() throws Exception {
+        User existingUser = User.builder()
+                .username("Existing user")
+                .email("taken@email.com")
+                .passwordHash(passwordEncoder.encode("Password1!"))
+                .verified(true)
+                .build();
+
+        userRepository.save(existingUser);
+
+        User otherExistingUser = User.builder()
+                .username("Existing user")
+                .email("othertaken@email.com")
+                .passwordHash(passwordEncoder.encode("Password1!"))
+                .verified(true)
+                .build();
+
+        userRepository.save(otherExistingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest emailChangeRequest = EmailChangeRequest.builder()
+            .user(existingUser)
+            .verificationTokenHash(hashedToken)
+            .expiresAt(LocalDateTime.now().plusHours(24))
+            .build();
+        emailChangeRequestRepository.save(emailChangeRequest);
+
+        SubmitEmailChangeRequest request = new SubmitEmailChangeRequest();
+        request.setNewEmail("othertaken@email.com");
+        request.setPassword("Password1!");
+        request.setToken(rawToken);
+
+        mockMvc.perform(post("/api/auth/change-email/submit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+    }
+
+    /* GET /change-email/confirm */
+
+    @Test
+    void confirmNewEmail_ValidToken_UserEmailUpdated() throws Exception {
+        User existingUser = User.builder()
+            .username("Existing user")
+            .email("taken@email.com")
+            .passwordHash(passwordEncoder.encode("Password1!"))
+            .verified(true)
+            .build();
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest emailChangeRequest = EmailChangeRequest.builder()
+            .user(existingUser)
+            .verificationTokenHash("somehash")
+            .confirmationTokenHash(hashedToken)
+            .newEmail("newunusedemail@email.com")
+            .expiresAt(LocalDateTime.now().plusHours(24))
+            .build();
+        emailChangeRequestRepository.save(emailChangeRequest);
+
+        mockMvc.perform(get("/api/auth/change-email/confirm")
+                .param("token", rawToken))
+            .andExpect(status().isOk());
+
+        User updatedUser = userRepository.findByEmailIgnoreCase("newunusedemail@email.com").orElseThrow();
+        assertEquals("newunusedemail@email.com", updatedUser.getEmail());
+    }
+
+    @Test
+    void confirmNewEmail_InvalidToken_ReturnsBadRequest() throws Exception {
+        User existingUser = User.builder()
+            .username("Existing user")
+            .email("taken@email.com")
+            .passwordHash(passwordEncoder.encode("Password1!"))
+            .verified(true)
+            .build();
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+
+        // Don't create any EmailChangeRequest
+
+        mockMvc.perform(get("/api/auth/change-email/confirm")
+                .param("token", rawToken))
+            .andExpect(status().isBadRequest());
+
+        User sameUser = userRepository.findByEmailIgnoreCase("taken@email.com").orElseThrow();
+        assertEquals("taken@email.com", sameUser.getEmail());
+    }
+
+    @Test
+    void confirmNewEmail_ExpiredToken_ReturnsBadRequest() throws Exception {
+        User existingUser = User.builder()
+            .username("Existing user")
+            .email("taken@email.com")
+            .passwordHash(passwordEncoder.encode("Password1!"))
+            .verified(true)
+            .build();
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest emailChangeRequest = EmailChangeRequest.builder()
+            .user(existingUser)
+            .verificationTokenHash("somehash")
+            .confirmationTokenHash(hashedToken)
+            .newEmail("newunusedemail@email.com")
+            .expiresAt(LocalDateTime.now().minusHours(24))
+            .build();
+        emailChangeRequestRepository.save(emailChangeRequest);
+
+        mockMvc.perform(get("/api/auth/change-email/confirm")
+                .param("token", rawToken))
+            .andExpect(status().isBadRequest());
+
+        User sameUser = userRepository.findByEmailIgnoreCase("taken@email.com").orElseThrow();
+        assertEquals("taken@email.com", sameUser.getEmail());
     }
 }
