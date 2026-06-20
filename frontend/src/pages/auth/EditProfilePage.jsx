@@ -1,6 +1,6 @@
 import '../auth/css/EditProfilePage.css';
 import { updateProfile } from '../../api/userApi.js'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import LoadingButton from '../../components/LoadingButton';
@@ -10,12 +10,18 @@ export default function EditProfilePage() {
     const { currentUser, login: updateUser } = useAuth();
     const navigate = useNavigate();
 
-    const [username, setUsername] = useState(currentUser?.username || '');
     const [errors, setErrors] = useState({});
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [passwordSuccess, setPasswordSuccess] = useState(false);
     const [initiateChangeEmailSuccess, setInitiateChangeEmailSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [username, setUsername] = useState('');
+
+    useEffect(() => {
+        if (currentUser) {
+            setUsername(currentUser.username || '');
+        }
+    }, [currentUser]);
 
     const handleSave = async () => {
         setLoading(true);

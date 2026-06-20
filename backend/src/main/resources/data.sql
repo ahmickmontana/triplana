@@ -7,6 +7,15 @@ VALUES (
     NOW()
 ) ON CONFLICT (email) DO NOTHING;
 
+INSERT INTO users (username, email, password_hash, is_verified, created_at)
+VALUES (
+    'Ahmick3',
+    'dogih61023@preparmy.com',
+    '$2a$10$yGiSNbNBLI9JeNlTwdXUoOrl0p1GwBLwRttoXWfOYwN4cNy5TTvQK',
+    true,
+    NOW()
+) ON CONFLICT (email) DO NOTHING;
+
 
 INSERT INTO trips (user_id, name, description, start_date, end_date, cover_image_path, created_at)
 VALUES 

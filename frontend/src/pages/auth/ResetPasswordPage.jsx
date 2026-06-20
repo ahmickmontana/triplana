@@ -1,6 +1,6 @@
 import '../auth/css/ResetPasswordPage.css';
-import { resetPassword } from '../../api/authApi.js'
-import { useState } from 'react';
+import { resetPassword, verifyResetToken } from '../../api/authApi.js'
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import LoadingButton from '../../components/LoadingButton';
@@ -19,6 +19,27 @@ export default function ResetPasswordPage() {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [tokenValid, setTokenValid] = useState(null);
+    const [tokenError, setTokenError] = useState(null);
+
+    useEffect(() => {
+        const verifyToken = async () => {
+            try {
+                await verifyResetToken(token);
+                setTokenValid(true);
+            } catch (error) {
+                setTokenValid(false);
+                setTokenError(error.response?.data?.message || 'This password reset link is invalid or expired.');
+            }
+        };
+
+        if (token) {
+            verifyToken();
+        } else {
+            setTokenValid(false);
+            setTokenError('This password reset link is invalid or expired.');
+        }
+    }, []);
 
     const handleSubmit = async () => {
         setLoading(true);
@@ -34,6 +55,25 @@ export default function ResetPasswordPage() {
         } finally {
             setLoading(false);
         }
+    }
+
+    if (tokenValid === false) {
+        return (
+            <div>
+                <div className="reset-password-page">
+                    <div className="reset-password-bg" />
+                    <div className="reset-password-content">
+                        <h1 className="page-title">Triplana.</h1>
+                        <p className="page-subtitle">Plan Your Trips Smarter.</p>
+                        <h2 className="form-title">Reset Password</h2>
+                        <p className="verify-error">{tokenError}</p>
+                        <button className="reset-password-btn" onClick={() => navigate('/forgot-password')}>
+                            Request New Reset Link
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
     }
     
     return (

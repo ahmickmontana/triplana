@@ -16,7 +16,6 @@ export default function CheckEmailPage() {
             await resendVerification({ email });
             setResendSuccess(true);
         } catch (error) {
-            console.log(error.response?.data);
         } finally {
             setResendLoading(false);
         }

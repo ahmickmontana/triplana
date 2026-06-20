@@ -41,7 +41,7 @@ public class TokenUtil {
         try {
             java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(rawToken.getBytes());
-            return Base64.getEncoder().encodeToString(hash);
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 is not available", e);
         }

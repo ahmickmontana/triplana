@@ -1,6 +1,6 @@
 import '../auth/css/LoginPage.css'; // Pretty much the same page as the login page, only difference is the behaviour.
-import { submitChangeEmail } from '../../api/authApi.js'
-import { useState } from 'react';
+import { submitChangeEmail, verifyChangeEmailToken } from '../../api/authApi.js'
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import LoadingButton from '../../components/LoadingButton';
@@ -17,6 +17,28 @@ export default function ChangeEmailPage() {
     const [searchParams] = useSearchParams();
     const token = searchParams.get('token');
 
+    const [tokenValid, setTokenValid] = useState(null);
+    const [tokenError, setTokenError] = useState(null);
+
+    useEffect(() => {
+        const verify = async () => {
+            try {
+                await verifyChangeEmailToken(token);
+                setTokenValid(true);
+            } catch (error) {
+                setTokenValid(false);
+                setTokenError(error.response?.data?.message || 'This link is invalid or expired.');
+            }
+        };
+
+        if (token) {
+            verify();
+        } else {
+            setTokenValid(false);
+            setTokenError('This link is invalid or expired.');
+        }
+    }, []);
+
     const handleSubmit = async () => {
     setLoading(true);
     setErrors({});
@@ -26,12 +48,28 @@ export default function ChangeEmailPage() {
             setSuccess(true);
         } catch (error) {
             if (error.response?.data) {
-                console.log(error.response?.data);
                 setErrors(error.response.data);
             }
         } finally {
             setLoading(false);
         }
+    }
+
+    if (tokenValid === false) {
+        return (
+            <div>
+                <div className="login-page">
+                    <div className="login-bg" />
+                    <h1 className="page-title">Triplana.</h1>
+                    <p className="page-subtitle">Plan Your Trips Smarter.</p>
+                    <h2 className="form-title">Change Email</h2>
+                    <p className="verify-error">{tokenError}</p>
+                    <button className="login-btn" onClick={() => navigate('/edit-profile')}>
+                        Back to Edit Profile
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     return (

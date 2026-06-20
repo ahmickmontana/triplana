@@ -13,6 +13,7 @@ public interface TokenRepository extends JpaRepository<Token, Long> {
     Optional<Token> findByTokenHash(String tokenHash);
     boolean existsByTokenHash(String tokenHash);
     Optional<Token> findByUserAndType(User user, TokenType type);
+    Optional<Token> findByTokenHashAndType(String hashedToken, TokenType type);
 
     @Modifying
     @Transactional

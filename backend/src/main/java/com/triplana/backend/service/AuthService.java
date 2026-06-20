@@ -13,7 +13,6 @@ import com.triplana.backend.dto.request.ResendVerificationRequest;
 import com.triplana.backend.dto.request.ResetPasswordRequest;
 import com.triplana.backend.dto.request.SubmitEmailChangeRequest;
 import com.triplana.backend.dto.response.LoginResponse;
-import com.triplana.backend.dto.response.UserResponse;
 import com.triplana.backend.entity.EmailChangeRequest;
 import com.triplana.backend.entity.Token;
 import com.triplana.backend.entity.TokenType;
@@ -307,5 +306,57 @@ public class AuthService {
         userRepository.save(user);
 
         emailChangeRequestRepository.delete(emailChangeRequest);
+    }
+
+    public void verifyResetToken(String rawToken) {
+        String hashedToken = tokenUtil.hashToken(rawToken);
+        
+        Token token = tokenRepository.findByTokenHashAndType(hashedToken, TokenType.PASSWORD_RESET)
+            .orElseThrow(() -> new AuthException("This password reset link is invalid or expired."));
+
+        if (token.isUsed() || !token.getExpiresAt().isAfter(LocalDateTime.now())) {
+            throw new AuthException("This password reset link is invalid or expired.");
+        }
+    }
+
+    public void verifyChangeEmailToken(String rawToken) {
+        String hashedToken = tokenUtil.hashToken(rawToken);
+        
+        EmailChangeRequest request = emailChangeRequestRepository
+            .findByVerificationTokenHash(hashedToken)
+            .orElseThrow(() -> new AuthException("This link is invalid or expired."));
+
+        if (!request.getExpiresAt().isAfter(LocalDateTime.now())) {
+            throw new AuthException("This link is invalid or expired.");
+        }
+    }
+
+    public void resendChangeEmailConfirmation(String rawToken) {
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest request = emailChangeRequestRepository
+            .findByConfirmationTokenHash(hashedToken)
+            .orElseThrow(() -> new AuthException("No pending email change request found."));
+
+        String newRawToken = tokenUtil.generateToken();
+        String newHashedToken = tokenUtil.hashToken(newRawToken);
+
+        request.setConfirmationTokenHash(newHashedToken);
+        request.setExpiresAt(LocalDateTime.now().plusHours(24));
+        emailChangeRequestRepository.save(request);
+
+        emailService.sendEmailChangeConfirmation(request.getNewEmail(), newRawToken);
+    }
+
+    public void verifyConfirmEmailToken(String rawToken) {
+        String hashedToken = tokenUtil.hashToken(rawToken);
+        
+        EmailChangeRequest request = emailChangeRequestRepository
+            .findByConfirmationTokenHash(hashedToken)
+            .orElseThrow(() -> new AuthException("This link is invalid or expired."));
+
+        if (!request.getExpiresAt().isAfter(LocalDateTime.now())) {
+            throw new AuthException("This link is invalid or expired.");
+        }
     }
 }

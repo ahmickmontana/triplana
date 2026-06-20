@@ -166,10 +166,33 @@ public class AuthController {
 
 
     @GetMapping("/change-email/confirm")
-    public ResponseEntity<ApiResponse> confirmNewEmail(@RequestParam String token) {
+    public ResponseEntity<ApiResponse> confirmNewEmail(@RequestParam String token, HttpSession session) {
         authService.confirmEmailChange(token);
+        session.invalidate();
         return ResponseEntity.ok(new ApiResponse(true, "Your account email has been updated."));
     }
     
-    
+    @GetMapping("/verify-reset-token")
+    public ResponseEntity<ApiResponse> verifyResetToken(@RequestParam String token) {
+        authService.verifyResetToken(token);
+        return ResponseEntity.ok(new ApiResponse(true, "Token is valid."));
+    }
+
+    @GetMapping("/verify-change-email-token")
+    public ResponseEntity<ApiResponse> verifyChangeEmailToken(@RequestParam String token) {
+        authService.verifyChangeEmailToken(token);
+        return ResponseEntity.ok(new ApiResponse(true, "Token is valid."));
+    }
+
+    @PostMapping("/resend-change-email-confirmation")
+    public ResponseEntity<ApiResponse> resendChangeEmailConfirmation(@RequestParam String token) {
+        authService.resendChangeEmailConfirmation(token);
+        return ResponseEntity.ok(new ApiResponse(true, "Confirmation email resent."));
+    }
+
+    @GetMapping("/verify-confirm-email-token")
+    public ResponseEntity<ApiResponse> verifyConfirmEmailToken(@RequestParam String token) {
+        authService.verifyConfirmEmailToken(token);
+        return ResponseEntity.ok(new ApiResponse(true, "Token is valid."));
+    }
 }
