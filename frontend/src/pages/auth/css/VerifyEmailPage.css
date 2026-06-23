@@ -19,16 +19,6 @@
     gap: 2.5rem;
 }
 
-.confirm-email-content {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    gap: 2.5rem;
-}
-
 .verify-error {
     color: black;
     font-family: 'Montserrat', sans-serif;
