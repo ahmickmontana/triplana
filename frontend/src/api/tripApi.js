@@ -5,4 +5,5 @@ const api = axios.create({
     withCredentials: true,
 });
 
-export const getTrips = () => api.get('/api/trips/');
+export const getTrips = () => api.get('/api/trips/')
+export const createTrip = (data) => api.post('/api/trips/', data);
