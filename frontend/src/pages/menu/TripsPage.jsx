@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getTrips } from '../../api/tripApi';
 import Navbar from '../../components/Navbar';
+import CreateTripModal from './CreateTripModal';
 import './TripsPage.css';
 import defaultTripImg from '../../assets/images/default-trip-img.jpg';
 
@@ -11,6 +12,7 @@ export default function TripsPage() {
     const navigate = useNavigate();
     const [trips, setTrips] = useState([]);
     const [tripsLoading, setTripsLoading] = useState(true);
+    const [createTrip, setCreateTrip] = useState(false);
 
     useEffect(() => {
         if (!loading && !currentUser) {
@@ -37,14 +39,21 @@ export default function TripsPage() {
 
     if (loading) return null;
 
+    const handleCreateTripModal = async (status) => {
+        setCreateTrip(!createTrip);
+    }
+
     return (
         <div className="trips-page">
             <Navbar />
             <div className="main-bg" />
             <div className="trips-content">
+
+                {createTrip && <CreateTripModal onClose={() => setCreateTrip(false)} />}
+
                 <div className="trips-header">
                     <h1 className="trips-title">My Trips</h1>
-                    <button className="create-trip-btn" onClick={() => navigate('/create-trip')}>
+                    <button className="create-trip-btn" onClick={handleCreateTripModal}>
                         + Create Trip
                     </button>
                 </div>

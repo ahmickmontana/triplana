@@ -1,0 +1,81 @@
+.outside-modal {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+}
+
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, calc(-50% + 50px));
+    z-index: 100;
+}
+
+.modal-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 2rem;
+    font-weight: bold;
+    color: black;
+}
+
+.trip-form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+}
+
+.form-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.modal .input-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.2rem;
+    color: black;
+}
+
+.modal .input-field {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.9rem;
+    color: black;
+}
+
+.modal-actions {
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.description {
+    min-height: 25px;
+    resize: none;
+}
+
+.trip-card-image {
+    position: relative;
+    cursor: pointer;
+}
+
+.trip-card-image img {
+    min-width: 100%;
+    object-fit: cover;
+}
+
+.trip-card-image:hover img {
+    filter: brightness(0.7);
+    transition: filter 0.2s ease;
+}
+
+.camera-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.3);
+}
