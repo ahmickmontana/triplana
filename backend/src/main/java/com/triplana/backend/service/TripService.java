@@ -1,9 +1,14 @@
 package com.triplana.backend.service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.triplana.backend.dto.request.CreateTripRequest;
 import com.triplana.backend.dto.response.TripResponse;
@@ -22,7 +27,7 @@ public class TripService {
 
     private final TripRepository tripRepository;
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     private final TripValidator tripValidator;
 
@@ -58,5 +63,32 @@ public class TripService {
         tripRepository.save(trip);
 
         return TripResponse.from(trip);
+    }
+
+    public TripResponse uploadCoverImage(Long tripId, Long userId, MultipartFile image) throws IOException {
+        Trip trip = tripRepository.findById(tripId)
+            .orElseThrow(() -> new AuthException("Trip not found"));
+        
+        if (!trip.getUser().getId().equals(userId)) {
+            throw new AuthException("You do not have permission to edit this trip");
+        }
+
+        String uploadDir = "uploads/covers/";
+        Files.createDirectories(Paths.get(uploadDir));
+
+        String fileName = "trip-" + tripId + getExtension(image.getOriginalFilename());
+        Path filePath = Paths.get(uploadDir + fileName);
+        Files.write(filePath, image.getBytes());
+
+        trip.setCoverImagePath("/" + uploadDir + fileName);
+        tripRepository.save(trip);
+
+        return TripResponse.from(trip);
+    }
+
+    private String getExtension(String filename) {
+        if (filename == null) return ".jpg";
+        int dot = filename.lastIndexOf('.');
+        return dot >= 0 ? filename.substring(dot) : ".jpg";
     }
 }

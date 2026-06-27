@@ -1,11 +1,14 @@
 import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './CreateTripModal.css';
 import defaultTripImg from '../../assets/images/default-trip-img.jpg';
 import { FaCamera } from 'react-icons/fa';
+import { createTrip, uploadCoverImage } from '../../api/tripApi.js'
 
 
-export default function CreateTripModal({ onClose }) {
-    const [title, setTitle] = useState('');
+export default function CreateTripModal({ onClose, onTripCreated }) {
+    const navigate = useNavigate();
+    const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -14,15 +17,62 @@ export default function CreateTripModal({ onClose }) {
     const [coverImg, setCoverImg] = useState(null);
     const [coverImgPreview, setCoverImgPreview] = useState(defaultTripImg)
 
+    const [errors, setErrors] = useState({});
+    const [imageError, setImageError] = useState(null);
+    const [loading, setLoading] = useState(false);
+
     const handleImageClick = () => {
         fileInputRef.current.click();
     };
 
     const handleImgChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            setCoverImg(file);
-            setCoverImgPreview(URL.createObjectURL(file));
+
+        if (!file) return;
+
+        const validExtensions = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!validExtensions.includes(file.type)) {
+            setImageError("Image must be a JPG, PNG or WEBP file.");
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            setImageError("Image must be under 10MB.");
+            return
+        }
+
+        setImageError(null);
+        setCoverImg(file);
+        setCoverImgPreview(URL.createObjectURL(file));
+    }
+
+    const handleTripCreation = async () => {
+        setLoading(true);
+        setErrors({});
+
+        try {
+            const response = await createTrip({
+                name, description, startDate: startDate || null, endDate: endDate || null
+            })
+
+
+            const tripId = response.data.id;
+
+            if (coverImg) {
+                const formData = new FormData();
+                formData.append('image', coverImg);
+                await uploadCoverImage(tripId, formData);
+            }
+            
+            onTripCreated();
+            onClose();
+
+        } catch (error) {
+            if (error.response?.data) {
+                setErrors(error.response.data);
+            }
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -46,18 +96,20 @@ export default function CreateTripModal({ onClose }) {
                                 style={{ display: 'none' }}
                             />
                         </div>
+                        {imageError && <p className="input-error">{imageError}</p>}
                     </div>
 
                     <div className="form-content">
-                        <label className="input-label">Trip Title</label>
+                        <label className="input-label">Trip Name</label>
                         <input
                             type="text"
                             maxLength={100}
-                            placeholder="Title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className={'input-field'}
+                            placeholder="Name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className={`input-field ${errors.name ? 'input-error-border' : ''}`}
                         />
+                        {errors.name && <p className="input-error">{errors.name}</p>}
                     </div>
 
                     <div className="form-content">
@@ -78,26 +130,28 @@ export default function CreateTripModal({ onClose }) {
                             type="date"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className={'input-field'}
+                            className={`input-field ${errors.startDate ? 'input-error-border' : ''}`}
                         />
+                        {errors.startDate && <p className="input-error">{errors.startDate}</p>}
                     </div>
 
                     <div className="form-content">
-                        <label className="input-label">Trip eND Date</label>
+                        <label className="input-label">Trip End Date</label>
                         <input
                             type="date"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
-                            className={'input-field'}
+                            className={`input-field ${errors.endDate ? 'input-error-border' : ''}`}
                         />
+                        {errors.endDate && <p className="input-error">{errors.endDate}</p>}
                     </div>
                 </form>
                 <div className="modal-actions">
                     <button className="modal-btn-cancel" onClick={onClose}>
                         Cancel
                     </button>
-                    <button className="modal-btn-confirm">
-                        Confirm
+                    <button type="button" className="modal-btn-confirm" onClick={handleTripCreation} disabled={loading}>
+                        {loading ? 'Creating...' : 'Create Trip'}
                     </button>
                 </div>
             </div>

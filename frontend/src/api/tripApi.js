@@ -7,3 +7,7 @@ const api = axios.create({
 
 export const getTrips = () => api.get('/api/trips/')
 export const createTrip = (data) => api.post('/api/trips/', data);
+export const uploadCoverImage = (tripId, formData) => 
+    api.post(`/api/trips/${tripId}/cover-image`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });

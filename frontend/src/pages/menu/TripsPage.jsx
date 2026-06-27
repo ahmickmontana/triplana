@@ -12,7 +12,8 @@ export default function TripsPage() {
     const navigate = useNavigate();
     const [trips, setTrips] = useState([]);
     const [tripsLoading, setTripsLoading] = useState(true);
-    const [createTrip, setCreateTrip] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [successMessage, setSuccessMessage] = useState(null);
 
     useEffect(() => {
         if (!loading && !currentUser) {
@@ -40,8 +41,20 @@ export default function TripsPage() {
     if (loading) return null;
 
     const handleCreateTripModal = async (status) => {
-        setCreateTrip(!createTrip);
+        setShowCreateModal(!showCreateModal);
     }
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
+    };
+
+    const handleTripCreated = () => {
+        getTrips();
+        setSuccessMessage('Trip created successfully!');
+        setTimeout(() => setSuccessMessage(null), 3000);
+    };
 
     return (
         <div className="trips-page">
@@ -49,7 +62,13 @@ export default function TripsPage() {
             <div className="main-bg" />
             <div className="trips-content">
 
-                {createTrip && <CreateTripModal onClose={() => setCreateTrip(false)} />}
+                {showCreateModal && <CreateTripModal 
+                                    onClose={() => setShowCreateModal(false)}
+                                    onTripCreated={handleTripCreated}
+                                />}
+                <div className="page-message">
+                    {successMessage && <p className="success-banner">{successMessage}</p>}
+                </div>
 
                 <div className="trips-header">
                     <h1 className="trips-title">My Trips</h1>
@@ -71,13 +90,19 @@ export default function TripsPage() {
                             <div key={trip.id} className="trip-card">
                                 <div className="trip-card-image">
                                     <img 
-                                        src={trip.coverImagePath || defaultTripImg} 
+                                        src={trip.coverImagePath ? `http://localhost:8080${trip.coverImagePath}` : defaultTripImg}
                                         alt={trip.name} 
                                     />
                                 </div>
                                 <div className="trip-card-info">
                                     <h3 className="trip-card-name">{trip.name}</h3>
-                                    <p className="trip-card-dates">{trip.startDate} to {trip.endDate}</p>
+                                    <p className="trip-card-dates">
+                                        {trip.startDate && trip.endDate 
+                                            ? `${formatDate(trip.startDate)} to ${formatDate(trip.endDate)}`
+                                            : trip.startDate 
+                                            ? formatDate(trip.startDate)
+                                            : ''}
+                                    </p>
                                 </div>
                             </div>
                         ))}

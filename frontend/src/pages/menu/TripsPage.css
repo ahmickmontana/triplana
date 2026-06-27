@@ -111,3 +111,13 @@
     color: #64748b;
     margin: 0;
 }
+
+.page-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.trips-content .success-banner {
+    width: fit-content;
+}
