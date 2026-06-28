@@ -2,6 +2,7 @@ package com.triplana.backend.controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.catalina.connector.Response;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.triplana.backend.dto.request.CreateTripRequest;
 import com.triplana.backend.dto.response.TripResponse;
+import com.triplana.backend.entity.Trip;
+import com.triplana.backend.exception.AuthException;
+import com.triplana.backend.repository.TripRepository;
 import com.triplana.backend.service.TripService;
 
 import jakarta.servlet.http.HttpSession;
@@ -30,6 +34,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class TripController {
     
     private final TripService tripService;
+
+    private final TripRepository tripRepository;
 
     @GetMapping("/")
     public ResponseEntity<List<TripResponse>> getTrips(HttpSession session) {
@@ -71,6 +77,14 @@ public class TripController {
             return ResponseEntity.ok(response);
         }
     
-
-
+    @GetMapping("/{id}")
+    public ResponseEntity<TripResponse> getTrip(@PathVariable Long id, HttpSession session) {
+        Long userId = (Long) session.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        
+        TripResponse response = tripService.getTrip(id, userId);
+        return ResponseEntity.ok(response);
+    }
 }

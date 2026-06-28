@@ -11,3 +11,4 @@ export const uploadCoverImage = (tripId, formData) =>
     api.post(`/api/trips/${tripId}/cover-image`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     });
+export const getTrip = (tripId) => api.get(`/api/trips/${tripId}`);
