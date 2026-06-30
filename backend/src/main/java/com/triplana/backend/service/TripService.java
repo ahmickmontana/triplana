@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.triplana.backend.dto.request.CreateTripRequest;
+import com.triplana.backend.dto.request.UpdateTripRequest;
 import com.triplana.backend.dto.response.TripResponse;
 import com.triplana.backend.entity.Trip;
 import com.triplana.backend.entity.User;
@@ -56,7 +57,6 @@ public class TripService {
             .description(request.getDescription())
             .startDate(request.getStartDate())
             .endDate(request.getEndDate())
-            .coverImagePath(request.getCoverImagePath())
             .build();
 
         // Save trip to repository
@@ -93,6 +93,26 @@ public class TripService {
         if (!trip.getUser().getId().equals(userId)) {
             throw new AuthException("You do not have permission to view this trip.");
         }
+
+        return TripResponse.from(trip);
+    }
+
+    public TripResponse updateTrip(Long tripId, Long userId, UpdateTripRequest request) {
+        tripValidator.validateTripDates(request.getStartDate(), request.getEndDate());
+
+        Trip trip = tripRepository.findById(tripId)
+            .orElseThrow(() -> new AuthException("Trip not found."));
+
+        if (!trip.getUser().getId().equals(userId)) {
+            throw new AuthException("You do not have permission to view this trip.");
+        }
+
+        trip.setName(request.getName());
+        trip.setDescription(request.getDescription());
+        trip.setStartDate(request.getStartDate());
+        trip.setEndDate(request.getEndDate());
+
+        tripRepository.save(trip);
 
         return TripResponse.from(trip);
     }

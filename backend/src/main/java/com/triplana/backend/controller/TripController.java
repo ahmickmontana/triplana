@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.triplana.backend.dto.request.CreateTripRequest;
+import com.triplana.backend.dto.request.UpdateTripRequest;
 import com.triplana.backend.dto.response.TripResponse;
 import com.triplana.backend.entity.Trip;
 import com.triplana.backend.exception.AuthException;
@@ -26,6 +27,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
+
 
 
 @RestController
@@ -85,6 +88,18 @@ public class TripController {
             }
         
         TripResponse response = tripService.getTrip(id, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TripResponse> putMethodName(@PathVariable Long id, @Valid @RequestBody UpdateTripRequest request, HttpSession session) {
+        Long userId = (Long) session.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+        TripResponse response = tripService.updateTrip(id, userId, request);
+        
         return ResponseEntity.ok(response);
     }
 }

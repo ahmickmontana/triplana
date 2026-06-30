@@ -12,3 +12,4 @@ export const uploadCoverImage = (tripId, formData) =>
         headers: { 'Content-Type': 'multipart/form-data' }
     });
 export const getTrip = (tripId) => api.get(`/api/trips/${tripId}`);
+export const updateTrip = (tripId, data) => api.put(`/api/trips/${tripId}`, data);

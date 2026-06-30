@@ -2,7 +2,7 @@ import { useState } from 'react';
 import './CreateTripModal.css';
 import defaultTripImg from '../../assets/images/default-trip-img.jpg';
 
-export default function ViewTripModal({ trip, onClose }) {
+export default function ViewTripModal({ trip, onClose, onEdit }) {
 
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
@@ -34,7 +34,7 @@ export default function ViewTripModal({ trip, onClose }) {
                             : ''}
                     </p>
                     <div className="modal-actions">
-                        <button className="modal-btn-cancel" onClick={onClose}>
+                        <button className="modal-btn-cancel" onClick={onEdit}>
                             Edit
                         </button>
                         <button className="modal-btn-confirm" onClick={onClose}>

@@ -5,6 +5,7 @@ import { getTrips } from '../../api/tripApi';
 import Navbar from '../../components/Navbar';
 import CreateTripModal from './CreateTripModal';
 import ViewTripModal from './ViewTripModal';
+import EditTripModal from './EditTripModal';
 import './TripsPage.css';
 import defaultTripImg from '../../assets/images/default-trip-img.jpg';
 
@@ -17,6 +18,7 @@ export default function TripsPage() {
     const [successMessage, setSuccessMessage] = useState(null);
 
     const [selectedTrip, setSelectedTrip] = useState(null);
+    const [editTrip, setEditTrip] = useState(null);
 
     useEffect(() => {
         if (!loading && !currentUser) {
@@ -53,9 +55,17 @@ export default function TripsPage() {
         return date.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
-    const handleTripCreated = () => {
-        getTrips();
+    const handleTripCreated = async () => {
+        const response = await getTrips();
+        setTrips(response.data);
         setSuccessMessage('Trip created successfully!');
+        setTimeout(() => setSuccessMessage(null), 3000);
+    };
+
+    const handleTripUpdated = async () => { 
+        const response = await getTrips();
+        setTrips(response.data);
+        setSuccessMessage('Trip updated successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
     };
 
@@ -73,7 +83,18 @@ export default function TripsPage() {
                 {selectedTrip && <ViewTripModal 
                                     trip={selectedTrip}
                                     onClose={() => setSelectedTrip(null)}
+                                    onEdit={() => {
+                                        setEditTrip(selectedTrip);
+                                        setSelectedTrip(null);
+                                    }}
                                 />}
+
+                {editTrip && (<EditTripModal
+                                trip={editTrip}
+                                onClose={() => setEditTrip(null)}
+                                onTripUpdated={handleTripUpdated}
+                            />
+                        )}
 
                 <div className="page-message">
                     {successMessage && <p className="success-banner">{successMessage}</p>}
@@ -106,7 +127,7 @@ export default function TripsPage() {
                                 <div className="trip-card-info">
                                     <h3 className="trip-card-name">{trip.name}</h3>
                                     <p className="trip-card-dates">
-                                        {trip.startDate && trip.endDate 
+                                        {trip.startDate && trip.endDate && trip.startDate !== trip.endDate
                                             ? `${formatDate(trip.startDate)} to ${formatDate(trip.endDate)}`
                                             : trip.startDate 
                                             ? formatDate(trip.startDate)
