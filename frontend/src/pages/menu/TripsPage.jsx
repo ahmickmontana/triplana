@@ -69,6 +69,14 @@ export default function TripsPage() {
         setTimeout(() => setSuccessMessage(null), 3000);
     };
 
+    const handleTripDeleted = async () => {
+        const response = await getTrips();
+        setTrips(response.data);
+        setSelectedTrip(null);
+        setSuccessMessage("Trip deleted successfully");
+        setTimeout(() => setSuccessMessage(null), 3000);
+    }
+
     return (
         <div className="trips-page">
             <Navbar />
@@ -87,6 +95,7 @@ export default function TripsPage() {
                                         setEditTrip(selectedTrip);
                                         setSelectedTrip(null);
                                     }}
+                                    onTripDeleted={handleTripDeleted}
                                 />}
 
                 {editTrip && (<EditTripModal
@@ -110,9 +119,6 @@ export default function TripsPage() {
                 {trips.length === 0 ? (
                     <div className="trips-empty">
                         <p className="trips-empty-message">No trips created yet.</p>
-                        <button className="create-trip-btn" onClick={handleCreateTripModal}>
-                            Create Trip
-                        </button>
                     </div>
                 ) : (
                     <div className="trips-grid">

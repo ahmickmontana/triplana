@@ -1,14 +1,30 @@
 import { useState } from 'react';
 import './CreateTripModal.css';
 import defaultTripImg from '../../assets/images/default-trip-img.jpg';
+import { deleteTrip } from '../../api/tripApi.js'
 
-export default function ViewTripModal({ trip, onClose, onEdit }) {
+export default function ViewTripModal({ trip, onClose, onEdit, onTripDeleted }) {
+    const [confirmDelete, setConfirmDelete] = useState(null);
 
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
         const date = new Date(dateStr);
         return date.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
     };
+
+    const handleDelete = async () => {
+        try {
+            await deleteTrip(trip.id);
+            
+            onTripDeleted();
+            onClose();
+        } catch (error) {
+            if (error.response?.data) {
+                console.log(error.response.data);
+            }
+        }
+    }
+
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -33,14 +49,22 @@ export default function ViewTripModal({ trip, onClose, onEdit }) {
                             ? formatDate(trip.startDate)
                             : ''}
                     </p>
-                    <div className="modal-actions">
-                        <button className="modal-btn-cancel" onClick={onEdit}>
-                            Edit
-                        </button>
-                        <button className="modal-btn-confirm" onClick={onClose}>
-                            View
-                        </button>
-                    </div>
+                    {confirmDelete ? (
+                        <div className="modal-delete-section">
+                            <strong>Are you sure you want to delete this trip?</strong>
+                            
+                            <div className="modal-actions">
+                                <button className="modal-btn-cancel" onClick={() => setConfirmDelete(false)}>Cancel</button>
+                                <button className="modal-btn-confirm" onClick={handleDelete}>Confirm Delete</button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="modal-actions">
+                            <button className="modal-btn-cancel" onClick={onEdit}>Edit</button>
+                            <button className="modal-btn-cancel" onClick={() => setConfirmDelete(true)}>Delete</button>
+                            <button className="modal-btn-confirm" onClick={onClose}>View</button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -108,7 +108,7 @@
 }
 
 .modal-actions {
-    gap: 2rem;
+    gap: 1rem;
     margin-top: 3rem;
 }
 
@@ -168,4 +168,13 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.modal-delete-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1rem;
+
 }

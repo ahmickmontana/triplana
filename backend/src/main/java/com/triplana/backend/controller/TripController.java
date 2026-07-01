@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.apache.catalina.connector.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -92,7 +93,7 @@ public class TripController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TripResponse> putMethodName(@PathVariable Long id, @Valid @RequestBody UpdateTripRequest request, HttpSession session) {
+    public ResponseEntity<TripResponse> updateTrip(@PathVariable Long id, @Valid @RequestBody UpdateTripRequest request, HttpSession session) {
         Long userId = (Long) session.getAttribute("userId");
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -101,5 +102,17 @@ public class TripController {
         TripResponse response = tripService.updateTrip(id, userId, request);
         
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTrip(@PathVariable Long id, HttpSession session) {
+        Long userId = (Long) session.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+        tripService.deleteTrip(id, userId);
+
+        return ResponseEntity.noContent().build();
     }
 }

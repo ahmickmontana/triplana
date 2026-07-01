@@ -117,6 +117,17 @@ public class TripService {
         return TripResponse.from(trip);
     }
 
+    public void deleteTrip(Long tripId, Long userId) {
+        Trip trip = tripRepository.findById(tripId)
+            .orElseThrow(() -> new AuthException("Trip not found."));
+
+        if (!trip.getUser().getId().equals(userId)) {
+            throw new AuthException("You do not have permission to view this trip.");
+        }
+
+        tripRepository.delete(trip);
+    }
+
     private String getExtension(String filename) {
         if (filename == null) return ".jpg";
         int dot = filename.lastIndexOf('.');
