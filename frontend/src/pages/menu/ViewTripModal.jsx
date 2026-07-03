@@ -43,7 +43,7 @@ export default function ViewTripModal({ trip, onClose, onEdit, onTripDeleted }) 
 
                 <div className="view-modal-footer">
                     <p className="trip-card-dates">
-                        {trip.startDate && trip.endDate 
+                        {trip.startDate && trip.endDate && trip.startDate !== trip.endDate
                             ? `${formatDate(trip.startDate)} to ${formatDate(trip.endDate)}`
                             : trip.startDate 
                             ? formatDate(trip.startDate)
@@ -52,6 +52,7 @@ export default function ViewTripModal({ trip, onClose, onEdit, onTripDeleted }) 
                     {confirmDelete ? (
                         <div className="modal-delete-section">
                             <strong>Are you sure you want to delete this trip?</strong>
+                            <strong>This action cannot be undone.</strong>
                             
                             <div className="modal-actions">
                                 <button className="modal-btn-cancel" onClick={() => setConfirmDelete(false)}>Cancel</button>

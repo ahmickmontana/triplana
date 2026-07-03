@@ -112,6 +112,10 @@ public class TripService {
         trip.setStartDate(request.getStartDate());
         trip.setEndDate(request.getEndDate());
 
+        if (request.isRemoveCoverImage()) {
+            trip.setCoverImagePath(null);
+        }
+
         tripRepository.save(trip);
 
         return TripResponse.from(trip);

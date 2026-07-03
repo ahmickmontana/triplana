@@ -12,6 +12,7 @@ export default function EditTripModal({ trip, onClose, onTripUpdated }) {
     const [description, setDescription] = useState(trip.description || '');
     const [startDate, setStartDate] = useState(trip.startDate || '');
     const [endDate, setEndDate] = useState(trip.endDate || '');
+    const [removeCoverImg, setRemoveCoverImg] = useState(false);
 
     const fileInputRef = useRef(null);
     const [coverImg, setCoverImg] = useState(null);
@@ -39,7 +40,7 @@ export default function EditTripModal({ trip, onClose, onTripUpdated }) {
         }
 
         if (file.size > 10 * 1024 * 1024) {
-            setImageError("Image must be under 10MB.");
+            setImageError("Image exceeds maximum file size (10MB).");
             return
         }
 
@@ -54,7 +55,7 @@ export default function EditTripModal({ trip, onClose, onTripUpdated }) {
 
         try {
             const response = await updateTrip(trip.id, {
-                name, description, startDate: startDate || null, endDate: endDate || null
+                name, description, startDate: startDate || null, endDate: endDate || null, removeCoverImage: removeCoverImg
             })
 
 
@@ -78,12 +79,18 @@ export default function EditTripModal({ trip, onClose, onTripUpdated }) {
         }
     }
 
+    const handleRemoveImage = () => {
+        setRemoveCoverImg(true);
+        setCoverImg(null);
+        setCoverImgPreview(defaultTripImg);
+    };
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
                 <p className="modal-title">Edit Trip</p>
                 <form className="trip-form">
-                    <div className="form-content">
+                    <div className="form-image-content">
                         <label className="input-label">Cover Image</label>
                         <div className="trip-card-image">
                             <img src={coverImgPreview} alt="cover" />
@@ -98,6 +105,11 @@ export default function EditTripModal({ trip, onClose, onTripUpdated }) {
                                 style={{ display: 'none' }}
                             />
                         </div>
+                        {coverImgPreview !== defaultTripImg && (
+                            <button type="button" className="modal-btn-remove" onClick={handleRemoveImage} disabled={loading}>
+                                Remove Cover Image
+                            </button>
+                        )}
                         {imageError && <p className="input-error">{imageError}</p>}
                     </div>
 

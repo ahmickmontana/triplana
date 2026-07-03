@@ -17,4 +17,6 @@ public class UpdateTripRequest {
     private LocalDate startDate;
 
     private LocalDate endDate;
+
+    private boolean removeCoverImage;
 }

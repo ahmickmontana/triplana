@@ -176,5 +176,29 @@
     justify-content: center;
     align-items: center;
     margin-top: 1rem;
+}
 
+.modal-btn-remove {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background-color: #ef4444;
+    color: white;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+    width: fit-content;
+}
+
+.modal-btn-remove:hover {
+    background-color: #dc2626;
+}
+
+.form-image-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
 }

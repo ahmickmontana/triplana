@@ -37,7 +37,7 @@ export default function CreateTripModal({ onClose, onTripCreated }) {
         }
 
         if (file.size > 10 * 1024 * 1024) {
-            setImageError("Image must be under 10MB.");
+            setImageError("Image exceeds maximum file size (10MB).");
             return
         }
 
