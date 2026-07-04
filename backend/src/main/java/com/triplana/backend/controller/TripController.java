@@ -2,9 +2,7 @@ package com.triplana.backend.controller;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
-import org.apache.catalina.connector.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,9 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.triplana.backend.dto.request.CreateTripRequest;
 import com.triplana.backend.dto.request.UpdateTripRequest;
 import com.triplana.backend.dto.response.TripResponse;
-import com.triplana.backend.entity.Trip;
-import com.triplana.backend.exception.AuthException;
-import com.triplana.backend.repository.TripRepository;
 import com.triplana.backend.service.TripService;
 
 import jakarta.servlet.http.HttpSession;
@@ -39,7 +34,6 @@ public class TripController {
     
     private final TripService tripService;
 
-    private final TripRepository tripRepository;
 
     @GetMapping("/")
     public ResponseEntity<List<TripResponse>> getTrips(HttpSession session) {

@@ -14,10 +14,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triplana.backend.dto.request.ForgotPasswordRequest;
@@ -26,7 +24,6 @@ import com.triplana.backend.dto.request.RegisterRequest;
 import com.triplana.backend.dto.request.ResendVerificationRequest;
 import com.triplana.backend.dto.request.ResetPasswordRequest;
 import com.triplana.backend.dto.request.SubmitEmailChangeRequest;
-import com.triplana.backend.dto.request.UpdateProfileRequest;
 import com.triplana.backend.entity.EmailChangeRequest;
 import com.triplana.backend.entity.Token;
 import com.triplana.backend.entity.TokenType;
