@@ -5,4 +5,12 @@ const api = axios.create({
     withCredentials: true,
 });
 
-export const getTrips = () => api.get('/api/trips/');
+export const getTrips = () => api.get('/api/trips/')
+export const createTrip = (data) => api.post('/api/trips/', data);
+export const uploadCoverImage = (tripId, formData) => 
+    api.post(`/api/trips/${tripId}/cover-image`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+export const getTrip = (tripId) => api.get(`/api/trips/${tripId}`);
+export const updateTrip = (tripId, data) => api.put(`/api/trips/${tripId}`, data);
+export const deleteTrip = (tripId) => api.delete(`/api/trips/${tripId}`);

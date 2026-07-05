@@ -44,7 +44,7 @@ export default function LandingPage() {
 
 
                 <section class="key-features">
-                    <h2 class="features-title">
+                    <h2 className="features-title">
                         Key Features
                     </h2>
                     <div class="features">
