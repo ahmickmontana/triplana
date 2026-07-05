@@ -870,4 +870,236 @@ public class AuthControllerIntegrationTest {
         User sameUser = userRepository.findByEmailIgnoreCase("taken@email.com").orElseThrow();
         assertEquals("taken@email.com", sameUser.getEmail());
     }
+
+    // GET /verify-reset-token
+
+    @Test
+    void verifyResetToken_whenValidToken_returnsOk() throws Exception {
+        User existingUser = User.builder()
+            .username("Existing user")
+            .email("taken@email.com")
+            .passwordHash(passwordEncoder.encode("Password1!"))
+            .verified(true)
+            .build();
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        Token token = Token.builder()
+            .user(existingUser)
+            .tokenHash(hashedToken)
+            .type(TokenType.PASSWORD_RESET)
+            .expiresAt(LocalDateTime.now().plusHours(24))
+            .used(false)
+            .build();
+        tokenRepository.save(token);
+
+        mockMvc.perform(get("/api/auth/verify-reset-token")
+                .param("token", rawToken))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void verifyResetToken_whenExpiredToken_returnsBadRequest() throws Exception {
+        User existingUser = User.builder()
+            .username("Existing user")
+            .email("taken@email.com")
+            .passwordHash(passwordEncoder.encode("Password1!"))
+            .verified(true)
+            .build();
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        Token token = Token.builder()
+            .user(existingUser)
+            .tokenHash(hashedToken)
+            .type(TokenType.PASSWORD_RESET)
+            .expiresAt(LocalDateTime.now().minusHours(1))
+            .used(false)
+            .build();
+        tokenRepository.save(token);
+
+        mockMvc.perform(get("/api/auth/verify-reset-token")
+                .param("token", rawToken))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void verifyResetToken_whenInvalidToken_returnsBadRequest() throws Exception {
+
+        mockMvc.perform(get("/api/auth/verify-reset-token")
+                .param("token", "nonexistenttoken"))
+            .andExpect(status().isBadRequest());
+    }
+
+    // GET /verify-confirm-email-token
+
+    @Test
+    void verifyConfirmEmailToken_whenValidToken_returnsOk() throws Exception {
+        User existingUser = User.builder()
+            .username("Existing user")
+            .email("taken@email.com")
+            .passwordHash(passwordEncoder.encode("Password1!"))
+            .verified(true)
+            .build();
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest request = EmailChangeRequest.builder()
+            .user(existingUser)
+            .confirmationTokenHash(hashedToken)
+            .verificationTokenHash("hashtoken")
+            .newEmail("newemail@email.com")
+            .expiresAt(LocalDateTime.now().plusHours(24))
+            .build();
+
+        emailChangeRequestRepository.save(request);
+
+        mockMvc.perform(get("/api/auth/verify-confirm-email-token")
+                .param("token", rawToken))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void verifyConfirmEmailToken_whenExpiredToken_returnsBadRequest() throws Exception {
+        // Creating the unverified user first.
+        User existingUser = User.builder()
+            .username("Existing user")
+            .email("taken@email.com")
+            .passwordHash(passwordEncoder.encode("Password1!"))
+            .verified(true)
+            .build();
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest request = EmailChangeRequest.builder()
+            .user(existingUser)
+            .confirmationTokenHash(hashedToken)
+            .verificationTokenHash("hashtoken")
+            .newEmail("newemail@email.com")
+            .expiresAt(LocalDateTime.now().minusHours(1))
+            .build();
+
+        emailChangeRequestRepository.save(request);
+
+        mockMvc.perform(get("/api/auth/verify-confirm-email-token")
+                .param("token", rawToken))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void verifyConfirmEmailToken_whenInvalidToken_returnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/auth/verify-confirm-email-token")
+                .param("token", "nonexistenttoken"))
+            .andExpect(status().isBadRequest());
+    }
+
+    // POST /api/auth/resend-change-email-confirmation
+
+    @Test
+    void resendChangeEmailConfirmation_whenValidToken_returnsOk() throws Exception {
+        User existingUser = User.builder()
+            .username("Existing user")
+            .email("taken@email.com")
+            .passwordHash(passwordEncoder.encode("Password1!"))
+            .verified(true)
+            .build();
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest request = EmailChangeRequest.builder()
+            .user(existingUser)
+            .confirmationTokenHash(hashedToken)
+            .verificationTokenHash("hashtoken")
+            .newEmail("newemail@email.com")
+            .expiresAt(LocalDateTime.now().plusHours(24))
+            .build();
+
+        emailChangeRequestRepository.save(request);
+
+        mockMvc.perform(post("/api/auth/resend-change-email-confirmation")
+                .param("token", rawToken))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void resendChangeEmailConfirmation_whenInvalidToken_returnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/auth/resend-change-email-confirmation")
+                .param("token", "nonexistenttoken"))
+            .andExpect(status().isBadRequest());
+    }
+
+    // GET /api/auth/verify-change-email-token
+
+    @Test
+    void verifyChangeEmailToken_whenValidToken_returnsOk() throws Exception {
+        User existingUser = User.builder()
+            .username("Existing user")
+            .email("taken@email.com")
+            .passwordHash(passwordEncoder.encode("Password1!"))
+            .verified(true)
+            .build();
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest request = EmailChangeRequest.builder()
+            .user(existingUser)
+            .confirmationTokenHash(null)
+            .verificationTokenHash(hashedToken)
+            .newEmail("newemail@email.com")
+            .expiresAt(LocalDateTime.now().plusHours(24))
+            .build();
+
+        emailChangeRequestRepository.save(request);
+
+        mockMvc.perform(get("/api/auth/verify-change-email-token")
+                .param("token", rawToken))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void verifyChangeEmailToken_whenExpiredToken_returnsBadRequest() throws Exception {
+        User existingUser = User.builder()
+            .username("Existing user")
+            .email("taken@email.com")
+            .passwordHash(passwordEncoder.encode("Password1!"))
+            .verified(true)
+            .build();
+        userRepository.save(existingUser);
+
+        String rawToken = tokenUtil.generateToken();
+        String hashedToken = tokenUtil.hashToken(rawToken);
+
+        EmailChangeRequest request = EmailChangeRequest.builder()
+            .user(existingUser)
+            .confirmationTokenHash(null)
+            .verificationTokenHash(hashedToken)
+            .newEmail("newemail@email.com")
+            .expiresAt(LocalDateTime.now().minusHours(1))
+            .build();
+
+        emailChangeRequestRepository.save(request);
+
+        mockMvc.perform(get("/api/auth/verify-change-email-token")
+                .param("token", rawToken))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void verifyChangeEmailToken_whenInvalidToken_returnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/auth/verify-change-email-token")
+                .param("token", "nonexistingtoken"))
+            .andExpect(status().isBadRequest());
+    }
 }
