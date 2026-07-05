@@ -22,6 +22,7 @@ import com.triplana.backend.service.EmailService;
 import jakarta.servlet.http.Cookie;
 import jakarta.transaction.Transactional;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -486,5 +487,115 @@ public class TripControllerIntegrationTest {
         List<Trip> trips = tripRepository.findAllByUserId(user.getId());
 
         assertFalse(trips.isEmpty());
+    }
+
+    // POST /{id}/cover-image
+    @Test
+    void uploadCoverImage_whenValidImage_coverImagePathUpdated() throws Exception {
+        User user = createUser("testUser", "user@email.com");
+
+        Trip trip = Trip.builder()
+            .user(user)
+            .name("Trip name")
+            .description("Trip description")
+            .startDate(LocalDate.now())
+            .endDate(LocalDate.now().plusDays(7))
+            .build();
+
+        tripRepository.save(trip);
+
+        UpdateTripRequest request = new UpdateTripRequest();
+        request.setName("New trip name");
+        request.setDescription(trip.getDescription());
+        request.setStartDate(trip.getStartDate());
+        request.setEndDate(trip.getEndDate());
+        
+        Cookie cookie = loginAndGetCookie("user@email.com");
+
+        MockMultipartFile image = new MockMultipartFile(
+            "image",
+            "test.jpg",
+            "image/jpeg",
+            new byte[100]
+        );
+
+        mockMvc.perform(multipart("/api/trips/" + trip.getId() + "/cover-image")
+            .file(image)
+            .cookie(cookie))
+        .andExpect(status().isOk());
+
+        assertNotNull(tripRepository.findById(trip.getId()).get().getCoverImagePath());
+    }
+
+    @Test
+    void uploadCoverImage_whenNotLoggedIn_returnsUnauthorized() throws Exception {
+        User user = createUser("testUser", "user@email.com");
+
+        Trip trip = Trip.builder()
+            .user(user)
+            .name("Trip name")
+            .description("Trip description")
+            .startDate(LocalDate.now())
+            .endDate(LocalDate.now().plusDays(7))
+            .build();
+
+        tripRepository.save(trip);
+
+        UpdateTripRequest request = new UpdateTripRequest();
+        request.setName("New trip name");
+        request.setDescription(trip.getDescription());
+        request.setStartDate(trip.getStartDate());
+        request.setEndDate(trip.getEndDate());
+        
+        MockMultipartFile image = new MockMultipartFile(
+            "image",
+            "test.jpg",
+            "image/jpeg",
+            new byte[100]
+        );
+
+        mockMvc.perform(multipart("/api/trips/" + trip.getId() + "/cover-image")
+            .file(image))
+        .andExpect(status().isUnauthorized());
+
+        assertNull(tripRepository.findById(trip.getId()).get().getCoverImagePath());
+    }
+
+    @Test
+    void uploadCoverImage_whenNotOwner_returnsBadRequest() throws Exception {
+        User user = createUser("testUser", "user@email.com");
+        User user2 = createUser("testUser2", "user2@email.com");
+
+        Trip trip = Trip.builder()
+            .user(user)
+            .name("Trip name")
+            .description("Trip description")
+            .startDate(LocalDate.now())
+            .endDate(LocalDate.now().plusDays(7))
+            .build();
+
+        tripRepository.save(trip);
+
+        UpdateTripRequest request = new UpdateTripRequest();
+        request.setName("New trip name");
+        request.setDescription(trip.getDescription());
+        request.setStartDate(trip.getStartDate());
+        request.setEndDate(trip.getEndDate());
+        
+        Cookie cookie = loginAndGetCookie("user2@email.com");
+
+        MockMultipartFile image = new MockMultipartFile(
+            "image",
+            "test.jpg",
+            "image/jpeg",
+            new byte[100]
+        );
+
+        mockMvc.perform(multipart("/api/trips/" + trip.getId() + "/cover-image")
+            .file(image)
+            .cookie(cookie))
+        .andExpect(status().isBadRequest());
+
+        assertNull(tripRepository.findById(trip.getId()).get().getCoverImagePath());
     }
 }
