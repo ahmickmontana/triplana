@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.triplana.backend.dto.request.CreateTripRequest;
 import com.triplana.backend.dto.request.UpdateTripRequest;
+import com.triplana.backend.dto.response.TripDayResponse;
 import com.triplana.backend.dto.response.TripResponse;
 import com.triplana.backend.service.TripService;
 
@@ -103,10 +104,23 @@ public class TripController {
         Long userId = (Long) session.getAttribute("userId");
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        }
 
         tripService.deleteTrip(id, userId);
 
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{id}/days")
+    public ResponseEntity<List<TripDayResponse>> getDays(@PathVariable Long id, HttpSession session) {
+        Long userId = (Long) session.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        List<TripDayResponse> days = tripService.getDays(id, userId);
+
+        return ResponseEntity.ok(days);
+    }
+    
 }

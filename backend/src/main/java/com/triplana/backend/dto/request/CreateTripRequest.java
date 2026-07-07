@@ -14,6 +14,7 @@ public class CreateTripRequest {
 
     private String description;
 
+    @NotNull
     private LocalDate startDate;
 
     private LocalDate endDate;
