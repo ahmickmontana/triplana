@@ -2,9 +2,11 @@ import { useState } from 'react';
 import './CreateTripModal.css';
 import defaultTripImg from '../../assets/images/default-trip-img.jpg';
 import { deleteTrip } from '../../api/tripApi.js'
+import { useNavigate } from 'react-router-dom';
 
 export default function ViewTripModal({ trip, onClose, onEdit, onTripDeleted }) {
     const [confirmDelete, setConfirmDelete] = useState(null);
+    const navigate = useNavigate();
 
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
@@ -63,7 +65,7 @@ export default function ViewTripModal({ trip, onClose, onEdit, onTripDeleted }) 
                         <div className="modal-actions">
                             <button className="modal-btn-cancel" onClick={onEdit}>Edit</button>
                             <button className="modal-btn-cancel" onClick={() => setConfirmDelete(true)}>Delete</button>
-                            <button className="modal-btn-confirm" onClick={onClose}>View</button>
+                            <button className="modal-btn-confirm" onClick={() => navigate(`/trips/${trip.id}/planner`)}>View</button>
                         </div>
                     )}
                 </div>

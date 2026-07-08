@@ -12,6 +12,7 @@ import TripsPage from './pages/menu/TripsPage';
 import EditProfilePage from './pages/auth/EditProfilePage';
 import ChangeEmailPage from './pages/auth/ChangeEmailPage';
 import ConfirmEmailPage from './pages/auth/ConfirmEmailPage';
+import TripPlannerPage from './pages/trip/TripPlannerPage';
 
 function ProtectedRoute({ children }) {
     const { currentUser } = useAuth();
@@ -36,6 +37,8 @@ function App() {
                 <Route path="/trips" element={<TripsPage />} />
 
                 <Route path="/edit-profile" element={<EditProfilePage/>} />
+
+                <Route path="/trips/:id/planner" element={<TripPlannerPage/>} />
 
                 {/* Default redirect */}
                 <Route path="*" element={<Navigate to="/login" />} />
