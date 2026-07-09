@@ -1,5 +1,5 @@
 import Navbar from '../../components/Navbar';
-import { getTrip } from '../../api/tripApi';
+import { getTrip, getTripDays } from '../../api/tripApi';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import './TripPlannerPage.css';
@@ -8,6 +8,8 @@ import './TripPlannerPage.css';
 export default function TripPlannerPage() {
     const { id } = useParams();
     const [ trip, setTrip ] = useState(null);
+    const [days, setDays] = useState([]);
+    const [selectedDay, setSelectedDay] = useState(null);
 
     useEffect(() => {
         const fetchTrip = async () => {
@@ -15,8 +17,22 @@ export default function TripPlannerPage() {
             console.log(response);
             setTrip(response.data);
         };
+
+        const fetchDays = async () => {
+            const response = await getTripDays(id);
+            setDays(response.data);
+            setSelectedDay(response.data[0]);
+        };
+
         fetchTrip();
+        fetchDays();
     }, [id]);
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
+    };
 
     const getTripDateString = () => {
         const startDate = new Date(trip.startDate);
@@ -55,6 +71,42 @@ export default function TripPlannerPage() {
                     </div>
                     <div className="planner-header-action">
                         <button className="planner-btn-confirm">View Accommodations</button>
+                    </div>
+                </div>
+
+                <div className="planner-items">
+                    <div className="day-activities">
+                        <div className="day-selector">
+                            <button 
+                                className="day-arrow"
+                                onClick={() => setSelectedDay(days[days.indexOf(selectedDay) - 1])}
+                                style={{ visibility: days.indexOf(selectedDay) === 0 ? 'hidden' : 'visible' }}
+                            >
+                                ←
+                            </button>
+                            <span className="day-label">
+                                Day {selectedDay?.dayNumber} ({formatDate(selectedDay?.date)})
+                            </span>
+                            <button 
+                                className="day-arrow"
+                                onClick={() => setSelectedDay(days[days.indexOf(selectedDay) + 1])}
+                                style={{ visibility: days.indexOf(selectedDay) === days.length - 1 ? 'hidden' : 'visible' }}
+                            >
+                                →
+                            </button>
+                        </div>
+                        <div className="day-activity">
+                            Activities
+                        </div>
+                        <div className="activities-action">
+                            <button className="activity-btn-add">+ Add Activity</button>
+                        </div>
+                    </div>
+                    <div className="trip-map">
+                        Map
+                    </div>
+                    <div className="trip-route">
+                        Route
                     </div>
                 </div>
             </div>
