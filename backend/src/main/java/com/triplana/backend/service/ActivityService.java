@@ -49,4 +49,18 @@ public class ActivityService {
 
         return ActivityResponse.from(activity);
     }
+
+    public List<ActivityResponse> getActivities(Long dayId, Long userId) {
+        TripDay tripDay = tripDayRepository.findById(dayId)
+            .orElseThrow(() -> new AuthException("Trip day not found."));
+
+        if (!tripDay.getTrip().getUser().getId().equals(userId)) {
+            throw new AuthException("You do not have permission to view this trip day.");
+        }
+
+        return activityRepository.findAllByTripDayIdOrderByManualOrderAsc(dayId)
+            .stream()
+            .map(ActivityResponse::from)
+            .toList();
+    }
 }

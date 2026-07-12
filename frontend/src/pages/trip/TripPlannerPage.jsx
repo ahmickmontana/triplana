@@ -1,8 +1,10 @@
 import Navbar from '../../components/Navbar';
 import { getTrip, getTripDays } from '../../api/tripApi';
+import { getActivities } from '../../api/activityApi';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import './TripPlannerPage.css';
+import AddActivityModal from './AddActivityModal';
 
 
 export default function TripPlannerPage() {
@@ -10,6 +12,9 @@ export default function TripPlannerPage() {
     const [ trip, setTrip ] = useState(null);
     const [days, setDays] = useState([]);
     const [selectedDay, setSelectedDay] = useState(null);
+    const [activities, setActivities] = useState([]);
+
+    const [showAddActivityModal, setShowAddActivityModal] = useState(false);
 
     useEffect(() => {
         const fetchTrip = async () => {
@@ -27,6 +32,19 @@ export default function TripPlannerPage() {
         fetchTrip();
         fetchDays();
     }, [id]);
+
+    useEffect(() => {
+        console.log('tripId:', id, 'dayId:', selectedDay?.id);
+
+        if (!selectedDay) return;
+        fetchActivities();
+    }, [selectedDay]);
+
+    const fetchActivities = async () => {
+        if (!selectedDay) return;
+        const response = await getActivities(id, selectedDay.id);
+        setActivities(response.data);
+    };
 
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
@@ -58,12 +76,36 @@ export default function TripPlannerPage() {
         }
     }
 
+    const handleCreateTripModal = async (status) => {
+        setShowAddActivityModal(!showAddActivityModal);
+        if (!selectedDay) return;
+        const response = await getActivities(id, selectedDay.id);
+        setActivities(response.data);
+    }
+
+    const formatTime = (time) => {
+        if (time === null) return;
+        const hour = Number(time.slice(0, 2));
+        const minute = time.slice(3, 5);
+        const meridiem = hour > 11 ? "pm" : "am";
+
+        return (hour > 12 ? (hour % 12) : hour) + ":" + minute + meridiem;
+    }
+
     if (!trip) return null;
 
     return (
         <div className="planner-page">
             <Navbar/>
             <div className="planner-content">
+
+                {showAddActivityModal && <AddActivityModal 
+                                                    tripId={trip.id}
+                                                    dayId={selectedDay.id}
+                                                    onClose={() => setShowAddActivityModal(false)}
+                                                    onActivityCreated={fetchActivities}
+                                                />}
+
                 <div className="planner-header">
                     <div className="planner-header-info">
                         <h1 className="planner-title">{trip.name}</h1>
@@ -96,10 +138,41 @@ export default function TripPlannerPage() {
                             </button>
                         </div>
                         <div className="day-activity">
-                            Activities
+                            {activities.length === 0 ? (
+                                <p className="no-activity">No activities added for this day.</p>
+                            ) : (
+                                activities.map(activity => (
+                                    <div className="activity-content" key={activity.id}>
+                                        <div className="activity-items">
+                                            {activity.startTime && activity.endTime ? (
+                                                <p className="activity-time">{formatTime(activity.startTime)} - {formatTime(activity.endTime)}</p>
+                                            ) : activity.startTime ? (
+                                                <p className="activity-time">{formatTime(activity.startTime)}</p>
+                                            ) : (
+                                                <p className="activity-time">No specified time</p>
+                                            )}
+
+                                            <p className="activity-title">{activity.title}</p>
+
+                                            <p className="activity-description">{activity.description}</p>
+
+                                            {activity.locationName ? (
+                                                <p className="activity-location">📍 {activity.locationName}</p>
+                                            ) : (
+                                                <p className="activity-location">📍 No location specified</p>
+                                            )}
+                                        </div>
+                                        <div className="activity-actions">
+                                            <button className="activity-action">✏️</button>
+                                            <button className="activity-action">🗑️</button>
+                                        </div>
+                                    </div>
+                                ))
+                            )
+                        }
                         </div>
                         <div className="activities-action">
-                            <button className="activity-btn-add">+ Add Activity</button>
+                            <button className="activity-btn-add" onClick={handleCreateTripModal}>+ Add Activity</button>
                         </div>
                     </div>
                     <div className="trip-map">
