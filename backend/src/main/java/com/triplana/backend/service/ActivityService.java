@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.triplana.backend.dto.request.CreateActivityRequest;
+import com.triplana.backend.dto.request.UpdateActivityRequest;
 import com.triplana.backend.dto.response.ActivityResponse;
 import com.triplana.backend.entity.Activity;
 import com.triplana.backend.entity.TripDay;
@@ -62,5 +63,31 @@ public class ActivityService {
             .stream()
             .map(ActivityResponse::from)
             .toList();
+    }
+
+    public ActivityResponse updateActivity(Long dayId, Long activityId, Long userId, UpdateActivityRequest request) {
+        TripDay tripDay = tripDayRepository.findById(dayId)
+            .orElseThrow(() -> new AuthException("Trip day not found."));
+
+        if (!tripDay.getTrip().getUser().getId().equals(userId)) {
+            throw new AuthException("You do not have permission to view this trip day.");
+        }
+
+        List<Activity> activities = activityRepository.findAllByTripDayIdOrderByManualOrderAsc(dayId);
+
+        activityValidator.validateTimes(request.getStartTime(), request.getEndTime(), activities, activityId);
+
+        Activity activity = activityRepository.findById(activityId)
+            .orElseThrow(() -> new AuthException("Activity not found."));
+
+        activity.setTitle(request.getTitle());
+        activity.setDescription(request.getDescription());
+        activity.setStartTime(request.getStartTime());
+        activity.setEndTime(request.getEndTime());
+        activity.setLocationName(request.getLocationName());
+
+        activityRepository.save(activity);
+
+        return ActivityResponse.from(activity);
     }
 }

@@ -1,5 +1,6 @@
 package com.triplana.backend.controller;
 
+import com.triplana.backend.repository.ActivityRepository;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -7,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.triplana.backend.dto.request.CreateActivityRequest;
+import com.triplana.backend.dto.request.UpdateActivityRequest;
 import com.triplana.backend.dto.response.ActivityResponse;
 import com.triplana.backend.service.ActivityService;
 
@@ -46,5 +48,20 @@ public class ActivityController {
 
         ActivityResponse response = activityService.createActivity(dayId, request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/{activityId}")
+    public ResponseEntity<ActivityResponse> updateActivity(@PathVariable Long dayId, @PathVariable Long activityId,
+        @Valid @RequestBody UpdateActivityRequest request, HttpSession session) {
+
+        Long userId = (Long) session.getAttribute("userId");
+
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        ActivityResponse response = activityService.updateActivity(dayId, activityId, userId, request);
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -10,3 +10,6 @@ export const createActivity = (tripId, dayId, data) =>
 
 export const getActivities = (tripId, dayId) =>
     api.get(`/api/trips/${tripId}/days/${dayId}/activities`);
+
+export const updateActivity = (tripId, dayId, activityId, data) =>
+    api.put(`/api/trips/${tripId}/days/${dayId}/activities/${activityId}`, data);

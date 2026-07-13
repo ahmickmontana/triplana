@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import './TripPlannerPage.css';
 import AddActivityModal from './AddActivityModal';
+import EditActivityModal from './EditActivityModal';
 
 
 export default function TripPlannerPage() {
@@ -15,6 +16,7 @@ export default function TripPlannerPage() {
     const [activities, setActivities] = useState([]);
 
     const [showAddActivityModal, setShowAddActivityModal] = useState(false);
+    const [editingActivity, setEditingActivity] = useState(null);
 
     useEffect(() => {
         const fetchTrip = async () => {
@@ -104,7 +106,17 @@ export default function TripPlannerPage() {
                                                     dayId={selectedDay.id}
                                                     onClose={() => setShowAddActivityModal(false)}
                                                     onActivityCreated={fetchActivities}
-                                                />}
+                />}
+
+                {editingActivity && (
+                    <EditActivityModal
+                        activity={editingActivity}
+                        tripId={id}
+                        dayId={selectedDay.id}
+                        onClose={() => setEditingActivity(null)}
+                        onActivityEdited={fetchActivities}
+                    />
+                )}
 
                 <div className="planner-header">
                     <div className="planner-header-info">
@@ -163,7 +175,7 @@ export default function TripPlannerPage() {
                                             )}
                                         </div>
                                         <div className="activity-actions">
-                                            <button className="activity-action">✏️</button>
+                                            <button className="activity-action" onClick={() => setEditingActivity(activity)}>✏️</button>
                                             <button className="activity-action">🗑️</button>
                                         </div>
                                     </div>

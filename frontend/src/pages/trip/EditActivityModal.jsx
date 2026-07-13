@@ -1,23 +1,23 @@
 import { useState } from 'react';
 import './AddActivityModal.css';
-import { createActivity } from '../../api/activityApi.js';
+import { updateActivity } from '../../api/activityApi.js';
 
-export default function AddActivityModal({ tripId, dayId, onClose, onActivityCreated }) {
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [startTime, setStartTime] = useState('');
-    const [endTime, setEndTime] = useState('');
-    const [locationName, setLocationName] = useState('');
+export default function EditActivityModal({ activity, tripId, dayId, onClose, onActivityEdited }) {
+    const [title, setTitle] = useState(activity.title || '');
+    const [description, setDescription] = useState(activity.description || '');
+    const [startTime, setStartTime] = useState(activity.startTime || '');
+    const [endTime, setEndTime] = useState(activity.endTime || '');
+    const [locationName, setLocationName] = useState(activity.locationName || '');
 
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
-    const handleCreateActivity = async () => {
+    const handleUpdateActivity = async () => {
         setLoading(true);
         setErrors({});
 
         try {
-            await createActivity(tripId, dayId, {
+            await updateActivity(tripId, dayId, activity.id, {
                 title,
                 description: description || null,
                 startTime: startTime || null,
@@ -25,7 +25,7 @@ export default function AddActivityModal({ tripId, dayId, onClose, onActivityCre
                 locationName: locationName || null,
             });
 
-            onActivityCreated();
+            onActivityEdited();
             onClose();
         } catch (error) {
             if (error.response?.data) {
@@ -39,7 +39,7 @@ export default function AddActivityModal({ tripId, dayId, onClose, onActivityCre
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
-                <p className="modal-title">Add Activity</p>
+                <p className="modal-title">Update Activity</p>
                 <form className="trip-form">
                     <div className="form-content">
                         <label className="input-label">Activity Name</label>
@@ -101,8 +101,8 @@ export default function AddActivityModal({ tripId, dayId, onClose, onActivityCre
                     <button className="modal-btn-cancel" onClick={onClose}>
                         Cancel
                     </button>
-                    <button type="button" className="modal-btn-confirm" onClick={handleCreateActivity} disabled={loading}>
-                        {loading ? 'Adding...' : 'Add Activity'}
+                    <button type="button" className="modal-btn-confirm" onClick={handleUpdateActivity} disabled={loading}>
+                        {loading ? 'Updating...' : 'Update Activity'}
                     </button>
                 </div>
             </div>
