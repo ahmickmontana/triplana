@@ -69,6 +69,7 @@
     justify-content: space-between;
     align-items: center;
     border-right: 1px solid black;
+    overflow: hidden;
 }
 
 .day-selector {
@@ -117,6 +118,7 @@
     flex: 1;
     overflow-y: auto;
     width: 100%;
+    overflow: hidden;
 }
 
 .activities-action {
@@ -148,10 +150,16 @@
     flex-direction: row;
     justify-content: space-between;
     border-bottom: 1px solid black;
+    overflow: hidden;
+    min-width: 0;
 }
 
 .activity-items {
     margin: 0.5rem;
+    overflow: hidden;
+    word-break: break-word;
+    min-width: 0;
+    flex: 1;
 }
 
 .activity-actions {
@@ -170,10 +178,16 @@
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.8rem;
     font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .activity-description {
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .activity-time {
