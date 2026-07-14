@@ -1,6 +1,6 @@
 import Navbar from '../../components/Navbar';
 import { getTrip, getTripDays } from '../../api/tripApi';
-import { getActivities } from '../../api/activityApi';
+import { getActivities, deleteActivity } from '../../api/activityApi';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import './TripPlannerPage.css';
@@ -17,6 +17,7 @@ export default function TripPlannerPage() {
 
     const [showAddActivityModal, setShowAddActivityModal] = useState(false);
     const [editingActivity, setEditingActivity] = useState(null);
+    const [deletingActivityId, setDeletingActivityId] = useState(null);
 
     useEffect(() => {
         const fetchTrip = async () => {
@@ -36,8 +37,6 @@ export default function TripPlannerPage() {
     }, [id]);
 
     useEffect(() => {
-        console.log('tripId:', id, 'dayId:', selectedDay?.id);
-
         if (!selectedDay) return;
         fetchActivities();
     }, [selectedDay]);
@@ -78,11 +77,30 @@ export default function TripPlannerPage() {
         }
     }
 
-    const handleCreateTripModal = async (status) => {
+    const handleCreateActivityModal = async (status) => {
+        setDeletingActivityId(null);
         setShowAddActivityModal(!showAddActivityModal);
         if (!selectedDay) return;
         const response = await getActivities(id, selectedDay.id);
         setActivities(response.data);
+    }
+
+    const handleEditActivity = async (activity) => {
+        setDeletingActivityId(null);
+        setEditingActivity(activity);
+    }
+
+    const handleDelete = async (activityId) => {
+        try {
+            await deleteActivity(trip.id, selectedDay.id, activityId);
+            fetchActivities();
+        } catch (error) {
+            if (error.response?.data) {
+                console.log(error.response.data);
+            }
+        } finally {
+            setDeletingActivityId(null);
+        }
     }
 
     const formatTime = (time) => {
@@ -153,38 +171,53 @@ export default function TripPlannerPage() {
                             {activities.length === 0 ? (
                                 <p className="no-activity">No activities added for this day.</p>
                             ) : (
+
                                 activities.map(activity => (
-                                    <div className="activity-content" key={activity.id}>
-                                        <div className="activity-items">
-                                            {activity.startTime && activity.endTime ? (
-                                                <p className="activity-time">{formatTime(activity.startTime)} - {formatTime(activity.endTime)}</p>
-                                            ) : activity.startTime ? (
-                                                <p className="activity-time">{formatTime(activity.startTime)}</p>
-                                            ) : (
-                                                <p className="activity-time">No specified time</p>
-                                            )}
+                                    <div>
+                                        {deletingActivityId === activity.id ? (
+                                                <div className="delete-activity-message activity-confirm-delete">
+                                                    <p className="delete-title">Are you sure you want to delete this activity?</p>
+                                                    <p className="delete-subtitle">This cannot be undone.</p>
+                                                    <div className="delete-actions">
+                                                        <button className="modal-btn-cancel" onClick={() => setDeletingActivityId(null)}>Cancel</button>
+                                                        <button className="modal-btn-confirm" onClick={() => handleDelete(activity.id)}>Confirm Delete</button>
+                                                    </div>
+                                                </div>
+                                                ) : (
+                                                    <div className="activity-content" key={activity.id}>
+                                                        <div className="activity-items">
+                                                            {activity.startTime && activity.endTime ? (
+                                                                <p className="activity-time">{formatTime(activity.startTime)} - {formatTime(activity.endTime)}</p>
+                                                            ) : activity.startTime ? (
+                                                                <p className="activity-time">{formatTime(activity.startTime)}</p>
+                                                            ) : (
+                                                                <p className="activity-time">No specified time</p>
+                                                            )}
 
-                                            <p className="activity-title">{activity.title}</p>
+                                                            <p className="activity-title">{activity.title}</p>
 
-                                            <p className="activity-description">{activity.description}</p>
+                                                            <p className="activity-description">{activity.description}</p>
 
-                                            {activity.locationName ? (
-                                                <p className="activity-location">📍 {activity.locationName}</p>
-                                            ) : (
-                                                <p className="activity-location">📍 No location specified</p>
-                                            )}
+                                                            {activity.locationName ? (
+                                                                <p className="activity-location">📍 {activity.locationName}</p>
+                                                            ) : (
+                                                                <p className="activity-location">📍 No location specified</p>
+                                                            )}
+                                                        </div>
+                                                        <div className="activity-actions">
+                                                            <button className="activity-action" onClick={() => handleEditActivity(activity)}>✏️</button>
+                                                            <button className="activity-action" onClick={() => setDeletingActivityId(activity.id)}>🗑️</button>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            }
                                         </div>
-                                        <div className="activity-actions">
-                                            <button className="activity-action" onClick={() => setEditingActivity(activity)}>✏️</button>
-                                            <button className="activity-action">🗑️</button>
-                                        </div>
-                                    </div>
                                 ))
                             )
                         }
                         </div>
                         <div className="activities-action">
-                            <button className="activity-btn-add" onClick={handleCreateTripModal}>+ Add Activity</button>
+                            <button className="activity-btn-add" onClick={handleCreateActivityModal}>+ Add Activity</button>
                         </div>
                     </div>
                     <div className="trip-map">

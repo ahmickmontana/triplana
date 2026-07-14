@@ -90,4 +90,16 @@ public class ActivityService {
 
         return ActivityResponse.from(activity);
     }
+
+    public void deleteActivity(Long activityId, Long userId) {
+
+        Activity activity = activityRepository.findById(activityId)
+            .orElseThrow(() -> new AuthException("Activity not found."));
+
+        if (!activity.getTripDay().getTrip().getUser().getId().equals(userId)) {
+            throw new AuthException("You do not have permission to view this activity.");
+        }
+
+        activityRepository.delete(activity);
+    }
 }

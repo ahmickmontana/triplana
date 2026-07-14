@@ -13,3 +13,6 @@ export const getActivities = (tripId, dayId) =>
 
 export const updateActivity = (tripId, dayId, activityId, data) =>
     api.put(`/api/trips/${tripId}/days/${dayId}/activities/${activityId}`, data);
+
+export const deleteActivity = (tripId, dayId, activityId) =>
+    api.delete(`/api/trips/${tripId}/days/${dayId}/activities/${activityId}`);

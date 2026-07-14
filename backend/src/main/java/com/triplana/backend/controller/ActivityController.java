@@ -64,4 +64,16 @@ public class ActivityController {
 
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{activityId}")
+    public ResponseEntity<Void> deleteActivity(@PathVariable Long activityId, HttpSession session) {
+        Long userId = (Long) session.getAttribute("userId");
+
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        activityService.deleteActivity(activityId, userId);
+        return ResponseEntity.noContent().build();
+    }
 }
