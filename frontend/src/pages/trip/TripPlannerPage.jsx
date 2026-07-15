@@ -19,6 +19,11 @@ export default function TripPlannerPage() {
     const [editingActivity, setEditingActivity] = useState(null);
     const [deletingActivityId, setDeletingActivityId] = useState(null);
 
+    const sortedActivities = [
+        ...activities.filter(a => a.startTime !== null).sort((a, b) => a.startTime.localeCompare(b.startTime)),
+        ...activities.filter(a => a.startTime === null)
+    ];
+
     useEffect(() => {
         const fetchTrip = async () => {
             const response = await getTrip(id);
@@ -172,8 +177,8 @@ export default function TripPlannerPage() {
                                 <p className="no-activity">No activities added for this day.</p>
                             ) : (
 
-                                activities.map(activity => (
-                                    <div>
+                                sortedActivities.map(activity => (
+                                    <>
                                         {deletingActivityId === activity.id ? (
                                                 <div className="delete-activity-message activity-confirm-delete">
                                                     <p className="delete-title">Are you sure you want to delete this activity?</p>
@@ -196,7 +201,7 @@ export default function TripPlannerPage() {
 
                                                             <p className="activity-title">{activity.title}</p>
 
-                                                            <p className="activity-description">{activity.description}</p>
+                                                            <p className="activity-description">{activity.description || '\u00A0'}</p>
 
                                                             {activity.locationName ? (
                                                                 <p className="activity-location">📍 {activity.locationName}</p>
@@ -211,7 +216,7 @@ export default function TripPlannerPage() {
                                                     </div>
                                                 )
                                             }
-                                        </div>
+                                        </>
                                 ))
                             )
                         }
