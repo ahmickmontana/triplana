@@ -1,6 +1,5 @@
 package com.triplana.backend.controller;
 
-import com.triplana.backend.repository.ActivityRepository;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;

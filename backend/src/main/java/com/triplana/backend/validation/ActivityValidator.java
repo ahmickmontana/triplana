@@ -29,12 +29,10 @@ public class ActivityValidator {
                 }
 
                 if (existing.getStartTime() != null && existing.getEndTime() != null) {
-                    // New start time falls within existing range
                     if (startTime.isAfter(existing.getStartTime()) && startTime.isBefore(existing.getEndTime())) {
                         throw new AuthException("startTime", "An activity is already planned at that time.");
                     }
                     
-                    // New start and end time overlaps with existing range
                     if (endTime != null && startTime.isBefore(existing.getEndTime()) && endTime.isAfter(existing.getStartTime())) {
                         throw new AuthException("endTime", "This time conflicts with another activity.");
                     }

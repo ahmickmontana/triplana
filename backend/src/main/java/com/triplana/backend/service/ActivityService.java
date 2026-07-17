@@ -29,7 +29,7 @@ public class ActivityService {
             .orElseThrow(() -> new AuthException("Trip day not found."));
 
         if (!tripDay.getTrip().getUser().getId().equals(userId)) {
-            throw new AuthException("You do not have permission to view this trip day");
+            throw new AuthException("You do not have permission to view this trip day.");
         }
 
         List<Activity> activities = activityRepository.findAllByTripDayIdOrderByManualOrderAsc(dayId);
@@ -70,7 +70,7 @@ public class ActivityService {
             .orElseThrow(() -> new AuthException("Trip day not found."));
 
         if (!tripDay.getTrip().getUser().getId().equals(userId)) {
-            throw new AuthException("You do not have permission to view this trip day.");
+            throw new AuthException("You do not have permission to access this trip day.");
         }
 
         List<Activity> activities = activityRepository.findAllByTripDayIdOrderByManualOrderAsc(dayId);
@@ -97,7 +97,7 @@ public class ActivityService {
             .orElseThrow(() -> new AuthException("Activity not found."));
 
         if (!activity.getTripDay().getTrip().getUser().getId().equals(userId)) {
-            throw new AuthException("You do not have permission to view this activity.");
+            throw new AuthException("You do not have permission to delete this activity.");
         }
 
         activityRepository.delete(activity);
