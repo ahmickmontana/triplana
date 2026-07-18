@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,10 +13,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.triplana.backend.dto.request.CreateTripRequest;
 import com.triplana.backend.dto.request.UpdateTripRequest;
+import com.triplana.backend.dto.response.TripDayResponse;
 import com.triplana.backend.dto.response.TripResponse;
 import com.triplana.backend.entity.Trip;
+import com.triplana.backend.entity.TripDay;
 import com.triplana.backend.entity.User;
 import com.triplana.backend.exception.AuthException;
+import com.triplana.backend.repository.TripDayRepository;
 import com.triplana.backend.repository.TripRepository;
 import com.triplana.backend.repository.UserRepository;
 import com.triplana.backend.validation.TripValidator;
@@ -29,6 +33,8 @@ public class TripService {
     private final TripRepository tripRepository;
 
     private final UserRepository userRepository;
+
+    private final TripDayRepository tripDayRepository;
 
     private final TripValidator tripValidator;
 
@@ -61,6 +67,22 @@ public class TripService {
 
         // Save trip to repository
         tripRepository.save(trip);
+
+        LocalDate current = request.getStartDate();
+        LocalDate end = request.getEndDate() != null ? request.getEndDate() : request.getStartDate();
+
+        int dayNumber = 1;
+
+        while (!current.isAfter(end)) {
+            TripDay tripDay = TripDay.builder()
+                .trip(trip)
+                .date(current)
+                .dayNumber(dayNumber)
+                .build();
+            tripDayRepository.save(tripDay);
+            current = current.plusDays(1);
+            dayNumber++;
+        }
 
         return TripResponse.from(trip);
     }
@@ -118,6 +140,45 @@ public class TripService {
 
         tripRepository.save(trip);
 
+        List<TripDay> tripDays = tripDayRepository.findAllByTripIdOrderByDayNumberAsc(tripId);
+
+        for (TripDay tripDay : tripDays) {
+            boolean beforeStart = tripDay.getDate().isBefore(request.getStartDate());
+            boolean afterEnd = request.getEndDate() != null && tripDay.getDate().isAfter(request.getEndDate());
+            if (beforeStart || afterEnd) {
+                tripDayRepository.delete(tripDay);
+            }
+        }
+        List<LocalDate> existingDates = tripDayRepository.findAllByTripIdOrderByDayNumberAsc(tripId)
+            .stream()
+            .map(TripDay::getDate)
+            .toList();
+
+        LocalDate current = request.getStartDate();
+        LocalDate end = request.getEndDate() != null ? request.getEndDate() : request.getStartDate();
+        int dayNumber = 1;
+
+        while (!current.isAfter(end)) {
+            if (!existingDates.contains(current)) {
+                TripDay newDay = TripDay.builder()
+                    .trip(trip)
+                    .date(current)
+                    .dayNumber(dayNumber)
+                    .build();
+                tripDayRepository.save(newDay);
+            }
+            current = current.plusDays(1);
+            dayNumber++;
+        }
+
+        List<TripDay> updatedDays = tripDayRepository.findAllByTripIdOrderByDateAsc(tripId);
+        int num = 1;
+        for (TripDay day : updatedDays) {
+            day.setDayNumber(num);
+            tripDayRepository.save(day);
+            num++;
+        }
+
         return TripResponse.from(trip);
     }
 
@@ -130,6 +191,21 @@ public class TripService {
         }
 
         tripRepository.delete(trip);
+    }
+
+    public List<TripDayResponse> getDays(Long tripId, Long userId) {
+        Trip trip = tripRepository.findById(tripId)
+            .orElseThrow(() -> new AuthException("Trip not found."));
+
+        if (!trip.getUser().getId().equals(userId)) {
+            throw new AuthException("You do not have permission to view this trip.");
+        }
+
+        List<TripDay> tripDays = tripDayRepository.findAllByTripIdOrderByDayNumberAsc(tripId);
+
+        return tripDays.stream()
+            .map(TripDayResponse::from)
+            .toList();
     }
 
     private String getExtension(String filename) {

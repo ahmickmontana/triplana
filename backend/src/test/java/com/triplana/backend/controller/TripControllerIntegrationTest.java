@@ -30,7 +30,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
@@ -365,7 +364,6 @@ public class TripControllerIntegrationTest {
     @Test
     void updateTrip_whenNotOwner_returnsBadRequest() throws Exception {
         User user = createUser("testUser", "user@email.com");
-        User user2 = createUser("testUser2", "user2@email.com");
 
         Trip trip = Trip.builder()
             .user(user)
@@ -564,7 +562,6 @@ public class TripControllerIntegrationTest {
     @Test
     void uploadCoverImage_whenNotOwner_returnsBadRequest() throws Exception {
         User user = createUser("testUser", "user@email.com");
-        User user2 = createUser("testUser2", "user2@email.com");
 
         Trip trip = Trip.builder()
             .user(user)

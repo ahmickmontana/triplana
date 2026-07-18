@@ -14,3 +14,5 @@ export const uploadCoverImage = (tripId, formData) =>
 export const getTrip = (tripId) => api.get(`/api/trips/${tripId}`);
 export const updateTrip = (tripId, data) => api.put(`/api/trips/${tripId}`, data);
 export const deleteTrip = (tripId) => api.delete(`/api/trips/${tripId}`);
+
+export const getTripDays = (tripId) => api.get(`/api/trips/${tripId}/days`);

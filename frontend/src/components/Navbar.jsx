@@ -11,7 +11,13 @@ export default function Navbar() {
 
     return (
         <nav className="navbar">
-            <span className="navbar-logo">Triplana.</span>
+            <span 
+            className="navbar-logo" 
+            onClick={() => currentUser && navigate('/trips')}
+            style={{ cursor: currentUser ? 'pointer' : 'default' }}
+        >
+            Triplana.
+        </span>
             <div className="navbar-actions">
                 {currentUser ? (
                     <>

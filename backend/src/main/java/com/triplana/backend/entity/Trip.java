@@ -28,7 +28,7 @@ public class Trip {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "start_date")
+    @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
     @Column(name = "end_date")
