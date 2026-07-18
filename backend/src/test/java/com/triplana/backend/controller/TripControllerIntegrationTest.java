@@ -364,6 +364,7 @@ public class TripControllerIntegrationTest {
     @Test
     void updateTrip_whenNotOwner_returnsBadRequest() throws Exception {
         User user = createUser("testUser", "user@email.com");
+        createUser("otherUser", "user2@email.com");
 
         Trip trip = Trip.builder()
             .user(user)
@@ -562,6 +563,8 @@ public class TripControllerIntegrationTest {
     @Test
     void uploadCoverImage_whenNotOwner_returnsBadRequest() throws Exception {
         User user = createUser("testUser", "user@email.com");
+        createUser("otherUser", "user2@email.com");
+
 
         Trip trip = Trip.builder()
             .user(user)
