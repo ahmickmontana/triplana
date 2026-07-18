@@ -20,6 +20,7 @@ import com.triplana.backend.dto.response.TripResponse;
 import com.triplana.backend.entity.Trip;
 import com.triplana.backend.entity.User;
 import com.triplana.backend.exception.AuthException;
+import com.triplana.backend.repository.TripDayRepository;
 import com.triplana.backend.repository.TripRepository;
 import com.triplana.backend.repository.UserRepository;
 import com.triplana.backend.validation.TripValidator;
@@ -29,6 +30,9 @@ public class TripServiceTest {
     
     @Mock
     private TripRepository tripRepository;
+
+    @Mock
+    private TripDayRepository tripDayRepository;
 
     @Mock
     private UserRepository userRepository;
