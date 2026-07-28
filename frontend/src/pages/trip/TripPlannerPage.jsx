@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 import './TripPlannerPage.css';
 import AddActivityModal from './AddActivityModal';
 import EditActivityModal from './EditActivityModal';
+import ViewAccommodations from './ViewAccommodationsModal';
 
 
 export default function TripPlannerPage() {
@@ -18,6 +19,8 @@ export default function TripPlannerPage() {
     const [showAddActivityModal, setShowAddActivityModal] = useState(false);
     const [editingActivity, setEditingActivity] = useState(null);
     const [deletingActivityId, setDeletingActivityId] = useState(null);
+
+    const [viewingAccommodations, setViewingAccommodations] = useState(false);
 
     const sortedActivities = [
         ...activities.filter(a => a.startTime !== null).sort((a, b) => a.startTime.localeCompare(b.startTime)),
@@ -95,6 +98,10 @@ export default function TripPlannerPage() {
         setEditingActivity(activity);
     }
 
+    const handleEditAccommodation = async () => {
+        setViewingAccommodations(!viewingAccommodations);
+    }
+
     const handleDelete = async (activityId) => {
         try {
             await deleteActivity(trip.id, selectedDay.id, activityId);
@@ -131,6 +138,12 @@ export default function TripPlannerPage() {
                                                     onActivityCreated={fetchActivities}
                 />}
 
+                {viewingAccommodations && <ViewAccommodations 
+                                                    tripId={trip.id}
+                                                    onClose={() => setViewingAccommodations(false)}
+                                                    onEditAccommodation={handleEditAccommodation}
+                />}
+
                 {editingActivity && (
                     <EditActivityModal
                         activity={editingActivity}
@@ -147,7 +160,7 @@ export default function TripPlannerPage() {
                         <p className="planner-date">{getTripDateString()}</p>
                     </div>
                     <div className="planner-header-action">
-                        <button className="planner-btn-confirm">View Accommodations</button>
+                        <button className="planner-btn-confirm" onClick={() => setViewingAccommodations(true)}>View Accommodations</button>
                     </div>
                 </div>
 
