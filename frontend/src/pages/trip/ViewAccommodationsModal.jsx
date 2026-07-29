@@ -3,11 +3,11 @@ import './AddActivityModal.css';
 import './ViewAccommodationsModal.css';
 import { getAccommodations, deleteAccommodation } from '../../api/accommodationApi.js';
 
-export default function ViewAccommodations({ tripId, onClose, onEditAccommodation }) {
+export default function ViewAccommodations({ tripId, onClose, onAddAccommodation, onEditAccommodation }) {
     const [accommodations, setAccommodations] = useState([]);
     const [deletingAccommodationId, setDeletingAccommodationId] = useState(null);
 
-    useEffect(() => {    
+    useEffect(() => {
             fetchAccommodations();
         }, [tripId]);
 
@@ -102,7 +102,7 @@ export default function ViewAccommodations({ tripId, onClose, onEditAccommodatio
                             }
                             </div>
 
-                    <div className="modal-actions">
+                    <div className="modal-actions" onClick={onAddAccommodation}>
                         <button className="activity-btn-add">+ Add Accommodation</button>
                     </div>
                 </div>

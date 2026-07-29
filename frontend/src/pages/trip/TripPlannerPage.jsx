@@ -7,6 +7,8 @@ import './TripPlannerPage.css';
 import AddActivityModal from './AddActivityModal';
 import EditActivityModal from './EditActivityModal';
 import ViewAccommodations from './ViewAccommodationsModal';
+import AddAccommodationModal from './AddAccommodationModal';
+import EditAccommodationModal from './EditAccommodationModal';
 
 
 export default function TripPlannerPage() {
@@ -21,6 +23,9 @@ export default function TripPlannerPage() {
     const [deletingActivityId, setDeletingActivityId] = useState(null);
 
     const [viewingAccommodations, setViewingAccommodations] = useState(false);
+    const [showAddAccommodation, setShowAddAccommodation] = useState(false);
+    const [showEditAccommodation, setShowEditAccommodation] = useState(false);
+    const [editingAccommodation, setEditingAccommodation] = useState(null);
 
     const sortedActivities = [
         ...activities.filter(a => a.startTime !== null).sort((a, b) => a.startTime.localeCompare(b.startTime)),
@@ -98,9 +103,26 @@ export default function TripPlannerPage() {
         setEditingActivity(activity);
     }
 
-    const handleEditAccommodation = async () => {
-        setViewingAccommodations(!viewingAccommodations);
+    const handleAddAccommodation = async () => {
+        setViewingAccommodations(false);
+        setShowAddAccommodation(true);
     }
+
+    const handleEditAccommodation = async (accommodation) => {
+        setViewingAccommodations(false);
+        setShowEditAccommodation(true);
+        setEditingAccommodation(accommodation);
+    }
+
+    const handleAccommodationAdded = () => {
+        setShowAddAccommodation(false);
+        setViewingAccommodations(true);
+    };
+
+    const handleAccommodationUpdated = () => {
+        setShowEditAccommodation(false);
+        setViewingAccommodations(true);
+    };
 
     const handleDelete = async (activityId) => {
         try {
@@ -141,7 +163,21 @@ export default function TripPlannerPage() {
                 {viewingAccommodations && <ViewAccommodations 
                                                     tripId={trip.id}
                                                     onClose={() => setViewingAccommodations(false)}
+                                                    onAddAccommodation={handleAddAccommodation}
                                                     onEditAccommodation={handleEditAccommodation}
+                />}
+
+                 {showAddAccommodation && <AddAccommodationModal 
+                                                    tripId={trip.id}
+                                                    onClose={() => setShowAddAccommodation(false)}
+                                                    onAccommodationAdded={handleAccommodationAdded}
+                />}
+
+                {showEditAccommodation && <EditAccommodationModal 
+                                                    tripId={trip.id}
+                                                    accommodation={editingAccommodation}
+                                                    onClose={() => setShowEditAccommodation(false)}
+                                                    onAccommodationUpdated={handleAccommodationAdded}
                 />}
 
                 {editingActivity && (
