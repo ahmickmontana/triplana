@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './AddActivityModal.css';
 import { updateActivity } from '../../api/activityApi.js';
+import LocationDropdown from '../../components/LocationDropdown.jsx';
 
 export default function EditActivityModal({ activity, tripId, dayId, onClose, onActivityEdited }) {
     const [title, setTitle] = useState(activity.title || '');
@@ -8,6 +9,9 @@ export default function EditActivityModal({ activity, tripId, dayId, onClose, on
     const [startTime, setStartTime] = useState(activity.startTime || '');
     const [endTime, setEndTime] = useState(activity.endTime || '');
     const [locationName, setLocationName] = useState(activity.locationName || '');
+    const [latitude, setLatitude] = useState(activity.latitude || null);
+    const [longitude, setLongitude] = useState(activity.longitude || null);
+    const [googlePlaceId, setGooglePlaceId] = useState(activity.googlePlaceId || null);
 
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
@@ -23,6 +27,9 @@ export default function EditActivityModal({ activity, tripId, dayId, onClose, on
                 startTime: startTime || null,
                 endTime: endTime || null,
                 locationName: locationName || null,
+                latitude: latitude || null,
+                longitude: longitude || null,
+                googlePlaceId: googlePlaceId || null,
             });
 
             onActivityEdited();
@@ -86,16 +93,15 @@ export default function EditActivityModal({ activity, tripId, dayId, onClose, on
                         {errors.endTime && <p className="input-error">{errors.endTime}</p>}
                     </div>
 
-                    <div className="form-content">
-                        <label className="input-label">Location</label>
-                        <input
-                            type="text"
-                            placeholder="Location"
-                            value={locationName}
-                            onChange={(e) => setLocationName(e.target.value)}
-                            className="input-field"
-                        />
-                    </div>
+                    <LocationDropdown
+                        locationValue={locationName}
+                        onSelect={(place) => {
+                            setLocationName(place.locationName);
+                            setLatitude(place.latitude);
+                            setLongitude(place.longitude);
+                            setGooglePlaceId(place.googlePlaceId);
+                        }}
+                    />
                 </form>
                 <div className="modal-actions">
                     <button className="modal-btn-cancel" onClick={onClose}>

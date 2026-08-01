@@ -5,5 +5,5 @@ const api = axios.create({
     withCredentials: true,
 });
 
-export const getAutocompleteSuggestions = (input) => api.get(`/api/places/autocomplete`, { params: { input } });
+export const getAutocompleteSuggestions = (input, types = 'establishment') => api.get(`/api/places/autocomplete`, { params: { input, types } });
 export const getPlaceDetails = (placeId) => api.get(`/api/places/details`, { params: { placeId } });

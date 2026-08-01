@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import '../menu/CreateTripModal.css';
 import { createAccommodation } from '../../api/accommodationApi.js'
+import LocationDropdown from '../../components/LocationDropdown.jsx';
 
 
 export default function AddAccommodationModal({ tripId, onClose, onAccommodationAdded }) {
@@ -8,6 +9,9 @@ export default function AddAccommodationModal({ tripId, onClose, onAccommodation
     const [locationName, setLocationName] = useState('');
     const [checkInDate, setCheckInDate] = useState('');
     const [checkOutDate, setCheckOutDate] = useState('');
+    const [latitude, setLatitude] = useState(null);
+    const [longitude, setLongitude] = useState(null);
+    const [googlePlaceId, setGooglePlaceId] = useState(null);
 
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
@@ -18,7 +22,13 @@ export default function AddAccommodationModal({ tripId, onClose, onAccommodation
 
         try {
             const response = await createAccommodation(tripId, {
-                name: accommodationName, locationName: locationName || null, checkInDate, checkOutDate
+                name: accommodationName, 
+                locationName: locationName || null, 
+                checkInDate, 
+                checkOutDate,
+                latitude: latitude || null,
+                longitude: longitude || null,
+                googlePlaceId: googlePlaceId || null
             });
                         
             onAccommodationAdded();
@@ -51,17 +61,15 @@ export default function AddAccommodationModal({ tripId, onClose, onAccommodation
                         {errors.name && <p className="input-error">{errors.name}</p>}
                     </div>
 
-                    <div className="form-content">
-                        <label className="input-label">Accommodation Location</label>
-                        <textarea
-                            type="text"
-                            maxLength={255}
-                            placeholder="Location Address"
-                            value={locationName}
-                            onChange={(e) => setLocationName(e.target.value)}
-                            className={'input-field description'}
-                        />
-                    </div>
+                    <LocationDropdown
+                        types="lodging"
+                        onSelect={(place) => {
+                            setLocationName(place.locationName);
+                            setLatitude(place.latitude);
+                            setLongitude(place.longitude);
+                            setGooglePlaceId(place.googlePlaceId);
+                        }}
+                    />
 
                     <div className="form-content">
                         <label className="input-label">Check-In Date</label>

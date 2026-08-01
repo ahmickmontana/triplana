@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './AddActivityModal.css';
 import { createActivity } from '../../api/activityApi.js';
+import LocationDropdown from '../../components/LocationDropdown.jsx';
 
 export default function AddActivityModal({ tripId, dayId, onClose, onActivityCreated }) {
     const [title, setTitle] = useState('');
@@ -8,6 +9,9 @@ export default function AddActivityModal({ tripId, dayId, onClose, onActivityCre
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const [locationName, setLocationName] = useState('');
+    const [latitude, setLatitude] = useState(null);
+    const [longitude, setLongitude] = useState(null);
+    const [googlePlaceId, setGooglePlaceId] = useState(null);
 
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
@@ -23,6 +27,9 @@ export default function AddActivityModal({ tripId, dayId, onClose, onActivityCre
                 startTime: startTime || null,
                 endTime: endTime || null,
                 locationName: locationName || null,
+                latitude: latitude || null,
+                longitude: longitude || null,
+                googlePlaceId: googlePlaceId || null,
             });
 
             onActivityCreated();
@@ -38,7 +45,7 @@ export default function AddActivityModal({ tripId, dayId, onClose, onActivityCre
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal activity-modal" onClick={(e) => e.stopPropagation()}>
                 <p className="modal-title">Add Activity</p>
                 <form className="trip-form">
                     <div className="form-content">
@@ -86,16 +93,16 @@ export default function AddActivityModal({ tripId, dayId, onClose, onActivityCre
                         {errors.endTime && <p className="input-error">{errors.endTime}</p>}
                     </div>
 
-                    <div className="form-content">
-                        <label className="input-label">Location</label>
-                        <input
-                            type="text"
-                            placeholder="Location"
-                            value={locationName}
-                            onChange={(e) => setLocationName(e.target.value)}
-                            className="input-field"
-                        />
-                    </div>
+                    <LocationDropdown
+                        locationValue={locationName}
+                        onSelect={(place) => {
+                            setLocationName(place.locationName);
+                            setLatitude(place.latitude);
+                            setLongitude(place.longitude);
+                            setGooglePlaceId(place.googlePlaceId);
+                        }}
+                    />
+
                 </form>
                 <div className="modal-actions">
                     <button className="modal-btn-cancel" onClick={onClose}>
