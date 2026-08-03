@@ -86,3 +86,8 @@
 .accommodations-modal .modal-actions {
     margin-top: 1rem;
 }
+
+.current-stay {
+    background-color: #EFF6FF;
+    border-left: 4px solid #3B82F6;
+}

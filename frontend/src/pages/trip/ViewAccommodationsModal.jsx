@@ -3,7 +3,7 @@ import './AddActivityModal.css';
 import './ViewAccommodationsModal.css';
 import { getAccommodations, deleteAccommodation } from '../../api/accommodationApi.js';
 
-export default function ViewAccommodations({ tripId, onClose, onAddAccommodation, onEditAccommodation }) {
+export default function ViewAccommodations({ tripId, selectedDay, onClose, onAddAccommodation, onEditAccommodation }) {
     const [accommodations, setAccommodations] = useState([]);
     const [deletingAccommodationId, setDeletingAccommodationId] = useState(null);
 
@@ -52,6 +52,14 @@ export default function ViewAccommodations({ tripId, onClose, onAddAccommodation
         }
     }
 
+    const isCurrentStay = (accommodation) => {
+        if (!selectedDay) return false;
+        const day = new Date(selectedDay.date);
+        const checkIn = new Date(accommodation.checkInDate);
+        const checkOut = new Date(accommodation.checkOutDate);
+        return day >= checkIn && day <= checkOut;
+    };
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -77,7 +85,7 @@ export default function ViewAccommodations({ tripId, onClose, onAddAccommodation
                                                         </div>
                                                     </div>
                                                     ) : (
-                                                        <div className="accommodation-content" key={accommodation.id}>
+                                                        <div className={`accommodation-content ${isCurrentStay(accommodation) ? 'current-stay' : ''} key={accommodation.id}`}>
                                                             <div className="accommodation-items">
                                                                 <p className="accommodation-date">{getAccommodationDateString(accommodation)}</p>
 

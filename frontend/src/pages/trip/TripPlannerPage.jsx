@@ -162,6 +162,7 @@ export default function TripPlannerPage() {
 
                 {viewingAccommodations && <ViewAccommodations 
                                                     tripId={trip.id}
+                                                    selectedDay={selectedDay}
                                                     onClose={() => setViewingAccommodations(false)}
                                                     onAddAccommodation={handleAddAccommodation}
                                                     onEditAccommodation={handleEditAccommodation}
