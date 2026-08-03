@@ -68,9 +68,9 @@ export default function ViewAccommodations({ tripId, selectedDay, onClose, onAdd
                         <p className="modal-title">Accommodations</p>
                     </div>
 
-                    <div className="accommodation">
+                    <div className={`accommodation ${accommodations.length === 0 ? 'accommodation-empty' : ''}`}>
                                 {accommodations.length === 0 ? (
-                                    <p className="no-accommodations">No accommodations added.</p>
+                                    <p className="no-accommodations">This trip has no accommodations listed.</p>
                                 ) : (
 
                                     accommodations.map(accommodation => (

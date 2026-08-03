@@ -13,11 +13,11 @@ public class AccommodationValidator {
     
     public void validateDates(LocalDate checkInDate, LocalDate checkOutDate, LocalDate tripStart, LocalDate tripEnd, List<Accommodation> existingAccommodations, Long excludeId) {
         if (checkOutDate != null && checkInDate != null && !checkOutDate.isAfter(checkInDate)) {
-            throw new AuthException("checkOutDate", "Check-in must be before check-out.");
+            throw new AuthException("checkInDate", "Check-in must be before check-out.");
         }
 
         if (checkInDate.isBefore(tripStart) || (tripEnd != null && checkOutDate.isAfter(tripEnd))) {
-            throw new AuthException("checkOutDate", "Accommodation must be within trip dates.");
+            throw new AuthException("checkInDate", "Accommodation must be within trip dates.");
         }
 
         if (checkInDate != null) {

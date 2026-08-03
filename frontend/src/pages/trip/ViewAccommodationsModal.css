@@ -45,6 +45,11 @@
     max-height: 48vh;
 }
 
+.accommodation-empty {
+    border-top: 0;
+    border-bottom: 0;
+}
+
 .accommodation-content {
     width: 100%;
     min-height: 12vh;
