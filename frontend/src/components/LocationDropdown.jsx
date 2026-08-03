@@ -7,6 +7,7 @@ export default function LocationDropdown({ locationValue, onSelect, types = 'est
     const [locationName, setLocationName] = useState(locationValue || '');
     const [suggestions, setSuggestions] = useState([]);
     const debounceTimer = useRef(null);
+    const [hasSearched, setHasSearched] = useState(false);
 
     const handleInput = (e) => {
         const value = e.target.value;
@@ -20,6 +21,7 @@ export default function LocationDropdown({ locationValue, onSelect, types = 'est
 
         debounceTimer.current = setTimeout(async () => {
             const response = await getAutocompleteSuggestions(value, types);
+            setHasSearched(true);
             setSuggestions(response.data);
         }, 500);
     }
@@ -62,6 +64,13 @@ export default function LocationDropdown({ locationValue, onSelect, types = 'est
                             </li>
                         ))}
 
+                    </ul>
+                )}
+                {hasSearched && locationName.length >= 3 && suggestions.length === 0 && (
+                    <ul className="location-dropdown">
+                        <li>
+                            No locations found.
+                        </li>
                     </ul>
                 )}
             </div>
