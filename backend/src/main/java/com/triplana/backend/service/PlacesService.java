@@ -13,16 +13,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triplana.backend.dto.response.PlaceDetailsResponse;
 import com.triplana.backend.dto.response.PlaceSuggestionResponse;
 
-import lombok.RequiredArgsConstructor;
 
 @Service
-@RequiredArgsConstructor
 public class PlacesService {
 
     @Value("${google.places.api.key}")
     private String apiKey;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    public PlacesService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
     
 
     public List<PlaceSuggestionResponse> getAutocompleteSuggestions(String input, String types) throws Exception {
