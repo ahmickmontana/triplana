@@ -46,3 +46,54 @@ VALUES
     NULL,
     NOW()
 ) ON CONFLICT DO NOTHING;
+
+INSERT INTO trip_days (trip_id, date, day_number)
+SELECT 
+    (SELECT id FROM trips WHERE name = 'Japan Trip 2026' AND user_id = (SELECT id FROM users WHERE email = 'ahmick@email.com')),
+    '2026-03-15'::date + (n - 1),
+    n
+FROM generate_series(1, 14) AS n
+ON CONFLICT DO NOTHING;
+
+INSERT INTO accommodations (trip_id, name, location_name, check_in_date, check_out_date, created_at)
+VALUES
+(
+    (SELECT id FROM trips WHERE name = 'Japan Trip 2026' AND user_id = (SELECT id FROM users WHERE email = 'ahmick@email.com')),
+    'Shinjuku Granbell Hotel',
+    'Shinjuku, Tokyo, Japan',
+    '2026-03-15',
+    '2026-03-17',
+    NOW()
+),
+(
+    (SELECT id FROM trips WHERE name = 'Japan Trip 2026' AND user_id = (SELECT id FROM users WHERE email = 'ahmick@email.com')),
+    'AirBnb',
+    'Kyoto, Japan',
+    '2026-03-18',
+    '2026-03-19',
+    NOW()
+),
+(
+    (SELECT id FROM trips WHERE name = 'Japan Trip 2026' AND user_id = (SELECT id FROM users WHERE email = 'ahmick@email.com')),
+    'APA Hotel Kyoto Station',
+    'Kyoto, Japan',
+    '2026-03-20',
+    '2026-03-22',
+    NOW()
+),
+(
+    (SELECT id FROM trips WHERE name = 'Japan Trip 2026' AND user_id = (SELECT id FROM users WHERE email = 'ahmick@email.com')),
+    'Cross Hotel Osaka',
+    'Shinsaibashi, Osaka, Japan',
+    '2026-03-22',
+    '2026-03-24',
+    NOW()
+),
+(
+    (SELECT id FROM trips WHERE name = 'Japan Trip 2026' AND user_id = (SELECT id FROM users WHERE email = 'ahmick@email.com')),
+    'Kansai Airport Hotel',
+    'Kansai Airport, Osaka, Japan',
+    '2026-03-25',
+    '2026-03-28',
+    NOW()
+);

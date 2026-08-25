@@ -6,6 +6,9 @@ import { useParams } from 'react-router-dom';
 import './TripPlannerPage.css';
 import AddActivityModal from './AddActivityModal';
 import EditActivityModal from './EditActivityModal';
+import ViewAccommodations from './ViewAccommodationsModal';
+import AddAccommodationModal from './AddAccommodationModal';
+import EditAccommodationModal from './EditAccommodationModal';
 
 
 export default function TripPlannerPage() {
@@ -18,6 +21,11 @@ export default function TripPlannerPage() {
     const [showAddActivityModal, setShowAddActivityModal] = useState(false);
     const [editingActivity, setEditingActivity] = useState(null);
     const [deletingActivityId, setDeletingActivityId] = useState(null);
+
+    const [viewingAccommodations, setViewingAccommodations] = useState(false);
+    const [showAddAccommodation, setShowAddAccommodation] = useState(false);
+    const [showEditAccommodation, setShowEditAccommodation] = useState(false);
+    const [editingAccommodation, setEditingAccommodation] = useState(null);
 
     const sortedActivities = [
         ...activities.filter(a => a.startTime !== null).sort((a, b) => a.startTime.localeCompare(b.startTime)),
@@ -95,6 +103,27 @@ export default function TripPlannerPage() {
         setEditingActivity(activity);
     }
 
+    const handleAddAccommodation = async () => {
+        setViewingAccommodations(false);
+        setShowAddAccommodation(true);
+    }
+
+    const handleEditAccommodation = async (accommodation) => {
+        setViewingAccommodations(false);
+        setShowEditAccommodation(true);
+        setEditingAccommodation(accommodation);
+    }
+
+    const handleAccommodationAdded = () => {
+        setShowAddAccommodation(false);
+        setViewingAccommodations(true);
+    };
+
+    const handleAccommodationUpdated = () => {
+        setShowEditAccommodation(false);
+        setViewingAccommodations(true);
+    };
+
     const handleDelete = async (activityId) => {
         try {
             await deleteActivity(trip.id, selectedDay.id, activityId);
@@ -131,6 +160,27 @@ export default function TripPlannerPage() {
                                                     onActivityCreated={fetchActivities}
                 />}
 
+                {viewingAccommodations && <ViewAccommodations 
+                                                    tripId={trip.id}
+                                                    selectedDay={selectedDay}
+                                                    onClose={() => setViewingAccommodations(false)}
+                                                    onAddAccommodation={handleAddAccommodation}
+                                                    onEditAccommodation={handleEditAccommodation}
+                />}
+
+                 {showAddAccommodation && <AddAccommodationModal 
+                                                    tripId={trip.id}
+                                                    onClose={() => setShowAddAccommodation(false)}
+                                                    onAccommodationAdded={handleAccommodationAdded}
+                />}
+
+                {showEditAccommodation && <EditAccommodationModal 
+                                                    tripId={trip.id}
+                                                    accommodation={editingAccommodation}
+                                                    onClose={() => setShowEditAccommodation(false)}
+                                                    onAccommodationUpdated={handleAccommodationAdded}
+                />}
+
                 {editingActivity && (
                     <EditActivityModal
                         activity={editingActivity}
@@ -147,7 +197,7 @@ export default function TripPlannerPage() {
                         <p className="planner-date">{getTripDateString()}</p>
                     </div>
                     <div className="planner-header-action">
-                        <button className="planner-btn-confirm">View Accommodations</button>
+                        <button className="planner-btn-confirm" onClick={() => setViewingAccommodations(true)}>View Accommodations</button>
                     </div>
                 </div>
 

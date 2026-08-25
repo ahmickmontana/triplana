@@ -43,6 +43,9 @@ public class ActivityService {
             .startTime(request.getStartTime())
             .endTime(request.getEndTime())
             .locationName(request.getLocationName())
+            .latitude(request.getLatitude())
+            .longitude(request.getLongitude())
+            .googlePlaceId(request.getGooglePlaceId())
             .manualOrder(activities.size() + 1)
             .build();
 
@@ -85,6 +88,9 @@ public class ActivityService {
         activity.setStartTime(request.getStartTime());
         activity.setEndTime(request.getEndTime());
         activity.setLocationName(request.getLocationName());
+        activity.setLatitude(request.getLatitude());
+        activity.setLongitude(request.getLongitude());
+        activity.setGooglePlaceId(request.getGooglePlaceId());
 
         activityRepository.save(activity);
 
