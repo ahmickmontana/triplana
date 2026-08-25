@@ -1,0 +1,176 @@
+:root {
+    --navy: #1E293B;
+    --navy-light: #29394F;
+    --blue: #3B82F6;
+    --orange: #F59E0B;
+    --text: #E2E8F0;
+    --muted: rgba(226, 232, 240, 0.65);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--navy);
+    color: var(--text);
+    font-family: system-ui, sans-serif;
+    line-height: 1.5;
+}
+
+main {
+    max-width: 50em;
+    margin: 0 auto;
+    padding: 8vh 6vw 10vh;
+}
+
+hr {
+    border: none;
+    border-top: 0.15vh dashed rgba(226, 232, 240, 0.2);
+    margin: 6vh 0;
+}
+
+h2 {
+    font-size: clamp(0.85rem, 1.8vw, 1rem);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 4vh;
+}
+
+/* Hero */
+
+.hero {
+    text-align: center;
+    margin-bottom: 6vh;
+}
+
+.hero .brand {
+    font-size: clamp(0.75rem, 1.5vw, 0.9rem);
+    letter-spacing: 0.4em;
+    color: var(--orange);
+    margin-bottom: 2vh;
+}
+
+.hero h1 {
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    margin: 0 0 1.5vh 0;
+}
+
+.hero p {
+    color: var(--muted);
+    max-width: 32em;
+    margin: 0 auto 3vh;
+}
+
+.badge {
+    display: inline-block;
+    border: 0.15vh solid var(--blue);
+    color: var(--blue);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.8vh 1.6vw;
+    border-radius: 2vh;
+}
+
+/* Features */
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12em, 1fr));
+    gap: 2vh 2vw;
+}
+
+.feature {
+    background: var(--navy-light);
+    border-radius: 1vh;
+    padding: 2.5vh 1.5vw;
+    text-align: center;
+}
+
+.feature .icon {
+    font-size: 1.6rem;
+    margin-bottom: 1vh;
+}
+
+.feature .label {
+    font-size: 0.95rem;
+}
+
+/* Roadmap */
+
+.roadmap {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4vh;
+}
+
+.roadmap-item {
+    display: flex;
+    align-items: center;
+    gap: 1.2vw;
+    background: var(--navy-light);
+    border-radius: 0.8vh;
+    padding: 1.6vh 1.5vw;
+}
+
+.status {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.4vh 1vw;
+    border-radius: 1vh;
+}
+
+.status.done {
+    background: rgba(59, 130, 246, 0.25);
+    color: #93C5FD;
+}
+
+.status.active {
+    background: rgba(245, 158, 11, 0.22);
+    color: #FBBF6A;
+}
+
+.status.planned {
+    background: rgba(226, 232, 240, 0.1);
+    color: var(--muted);
+}
+
+/* Update log — duplicate .update-card in the HTML for each new entry, newest first */
+
+.updates {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5vh;
+}
+
+.update-card {
+    border-left: 0.25vh solid var(--blue);
+    padding-left: 1.5vw;
+}
+
+.update-card .date {
+    font-size: 0.8rem;
+    color: var(--blue);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.6vh;
+}
+
+.update-card p {
+    margin: 0;
+    color: var(--muted);
+}
+
+/* Footer */
+
+footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 8vh;
+}
