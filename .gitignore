@@ -28,3 +28,6 @@ replay_pid*
 
 #application-local
 application-local.properties
+
+#.env
+.env

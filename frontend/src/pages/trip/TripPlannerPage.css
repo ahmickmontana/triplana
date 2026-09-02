@@ -259,6 +259,22 @@
     align-items: center;
 }
 
+.activity-pin {
+    background-color: #3B82F6;
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: bold;
+    font-size: 0.9rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
 .trip-route {
     width: 100%;
     display: flex;

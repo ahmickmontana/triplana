@@ -1,4 +1,5 @@
 import Navbar from '../../components/Navbar';
+import { Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 import { getTrip, getTripDays } from '../../api/tripApi';
 import { getActivities, deleteActivity } from '../../api/activityApi';
 import { useEffect, useState } from 'react';
@@ -276,7 +277,27 @@ export default function TripPlannerPage() {
                         </div>
                     </div>
                     <div className="trip-map">
-                        Map
+                        <Map
+                            defaultCenter={{ lat: 35.6595, lng: 139.7004 }}
+                            defaultZoom={13}
+                            style={{ width: '100%', height: '100%' }}
+                            gestureHandling="greedy"
+                            mapId="triplana-map"
+                        >
+                            {sortedActivities
+                                .filter(a => a.latitude && a.longitude)
+                                .map((activity, index) => (
+                                    <AdvancedMarker
+                                        key={activity.id}
+                                        position={{ lat: activity.latitude, lng: activity.longitude }}
+                                    >
+                                        <div className="activity-pin">
+                                            {index + 1}
+                                        </div>
+                                    </AdvancedMarker>
+                                ))
+                            }
+                        </Map>
                     </div>
                     <div className="trip-route">
                         Route
