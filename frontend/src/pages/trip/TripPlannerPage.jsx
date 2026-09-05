@@ -1,7 +1,9 @@
 import Navbar from '../../components/Navbar';
-import { Map, AdvancedMarker } from '@vis.gl/react-google-maps';
+import { Map, AdvancedMarker, Polyline } from '@vis.gl/react-google-maps';
+import { decode } from '@googlemaps/polyline-codec';
 import { getTrip, getTripDays } from '../../api/tripApi';
 import { getActivities, deleteActivity } from '../../api/activityApi';
+import { computeRoute } from '../../api/routingApi';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import './TripPlannerPage.css';
@@ -18,6 +20,7 @@ export default function TripPlannerPage() {
     const [days, setDays] = useState([]);
     const [selectedDay, setSelectedDay] = useState(null);
     const [activities, setActivities] = useState([]);
+    const [selectedActivityIds, setSelectedActivityIds] = useState([]);
 
     const [showAddActivityModal, setShowAddActivityModal] = useState(false);
     const [editingActivity, setEditingActivity] = useState(null);
@@ -28,10 +31,15 @@ export default function TripPlannerPage() {
     const [showEditAccommodation, setShowEditAccommodation] = useState(false);
     const [editingAccommodation, setEditingAccommodation] = useState(null);
 
+    const [route, setRoute] = useState(null);
+
     const sortedActivities = [
         ...activities.filter(a => a.startTime !== null).sort((a, b) => a.startTime.localeCompare(b.startTime)),
         ...activities.filter(a => a.startTime === null)
     ];
+
+    const selectedActivities = sortedActivities
+    .filter(a => selectedActivityIds.includes(a.id) && a.latitude && a.longitude);
 
     useEffect(() => {
         const fetchTrip = async () => {
@@ -54,6 +62,10 @@ export default function TripPlannerPage() {
         if (!selectedDay) return;
         fetchActivities();
     }, [selectedDay]);
+
+    useEffect(() => {
+        setRoute(null);
+    }, [selectedActivityIds]);
 
     const fetchActivities = async () => {
         if (!selectedDay) return;
@@ -138,6 +150,40 @@ export default function TripPlannerPage() {
         }
     }
 
+    const toggleActivity = async (activityId) => {
+        setSelectedActivityIds(prev =>
+            prev.includes(activityId)
+                ? prev.filter(id => id !== activityId)
+                : [...prev, activityId]
+        );
+
+        console.log(selectedActivityIds);
+    };
+
+    const handleShowRoute = async () => {
+        try {
+            const selectedActivities = sortedActivities
+                .filter(a => selectedActivityIds.includes(a.id) && a.latitude && a.longitude);
+
+            if (selectedActivities.length < 2) return;
+
+            const response = await computeRoute({
+                originLat: selectedActivities[0].latitude,
+                originLng: selectedActivities[0].longitude,
+                destLat: selectedActivities[selectedActivities.length - 1].latitude,
+                destLng: selectedActivities[selectedActivities.length - 1].longitude,
+                travelMode: 'WALK'
+            });
+
+            console.log(response.data);
+            setRoute(response.data);
+        } catch (error) {
+            if (error.response?.data) {
+                console.log(error.response.data);
+            }
+        }
+    }
+
     const formatTime = (time) => {
         if (time === null) return;
         const hour = Number(time.slice(0, 2));
@@ -146,6 +192,15 @@ export default function TripPlannerPage() {
 
         return (hour > 12 ? (hour % 12) : hour) + ":" + minute + meridiem;
     }
+
+    const formatDuration = (durationStr) => {
+        const seconds = parseInt(durationStr.replace('s', ''));
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        
+        if (hours > 0) return `${hours}h ${minutes}min`;
+        return `${minutes}min`;
+    };
 
     if (!trip) return null;
 
@@ -241,6 +296,16 @@ export default function TripPlannerPage() {
                                                 </div>
                                                 ) : (
                                                     <div className="activity-content" key={activity.id}>
+                                                        <div className="activity-checkbox">
+                                                            <input 
+                                                                className="activity-route-checkbox"
+                                                                type="checkbox"
+                                                                id={`checkbox-${activity.id}`}
+                                                                checked={selectedActivityIds.includes(activity.id)}
+                                                                onChange={() => toggleActivity(activity.id)}
+                                                            />
+                                                            <label htmlFor={`checkbox-${activity.id}`} className="checkbox-label" />
+                                                        </div>
                                                         <div className="activity-items">
                                                             {activity.startTime && activity.endTime ? (
                                                                 <p className="activity-time">{formatTime(activity.startTime)} - {formatTime(activity.endTime)}</p>
@@ -297,10 +362,51 @@ export default function TripPlannerPage() {
                                     </AdvancedMarker>
                                 ))
                             }
+
+                            {route && (
+                                <Polyline
+                                    path={decode(route.encodedPolyline).map(([lat, lng]) => ({ lat, lng }))}
+                                    strokeColor="#3B82F6"
+                                    strokeWeight={4}
+                                />
+                            )}
                         </Map>
                     </div>
                     <div className="trip-route">
-                        Route
+                        {route && (
+                            <div className="route-details">
+                                {selectedActivities.map((activity, index) => (
+                                    <div key={activity.id}>
+                                        <p className="route-activity-title">{activity.title}</p>
+                                        <div className="route-stop">
+                                            <p>📍{activity.locationName || activity.title}</p>
+                                        </div>
+                                        {index < selectedActivities.length - 1 && (
+                                            <div className="route-travel">
+                                                <div className="route-arrow">↓</div>
+                                                <div className="route-segment">
+                                                    <p>{route.legs[index]?.distanceText}</p>
+                                                    <p>•</p>
+                                                    <p>{formatDuration(route.legs[index]?.duration)}</p>
+                                                    <p>•</p>
+                                                    <p>🚶 Walking</p>
+                                                </div>
+                                                <div className="route-arrow">↓</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {selectedActivityIds.length >= 2 && (
+                            <div className="route-footer">
+                                {selectedActivityIds.length >= 2 && (
+                                    <button className="activity-btn-add" onClick={handleShowRoute}>
+                                        Show Route
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

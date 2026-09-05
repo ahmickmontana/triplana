@@ -170,6 +170,7 @@
 
 .activity-items {
     margin: 0.5rem;
+    margin-left: 0;
     overflow: hidden;
     word-break: break-word;
     min-width: 0;
@@ -278,8 +279,112 @@
 .trip-route {
     width: 100%;
     display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 1px solid black;
+    overflow: hidden;
+}
+
+.route-details {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow-y: auto;
+    flex: 1;
+    margin-top: 1rem;
+}
+
+.route-details > div {
+    width: 95%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.route-activity-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.route-stop {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.25rem;
+}
+
+.route-travel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+    margin: 1.2rem;
+}
+
+.route-segment {
+    background-color: lightgray;
+    width: 100%;
+    display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    border-left: 1px solid black;
+    gap: 2rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.25rem;
+}
+
+.route-arrow {
+    font-size: 2rem;
+    font-weight: lighter;
+}
+
+.activity-checkbox {
+    display: flex;
+    align-items: center;
+    margin: 1rem;
+}
+
+.activity-route-checkbox {
+    display: none;
+}
+
+.checkbox-label {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid #3B82F6;
+    border-radius: 25%;
+    background-color: white;
+    cursor: pointer;
+    display: block;
+    position: relative;
+}
+
+.checkbox-label:hover {
+    background-color: #3B82F6;
+}
+
+.activity-route-checkbox:checked + .checkbox-label {
+    background-color: #3B82F6;
+    border-color: #3B82F6;
+}
+
+.activity-route-checkbox:checked + .checkbox-label:hover {
+    background-color: #2563EB;
+    border-color: #2563EB;
+}
+
+.activity-route-checkbox:checked + .checkbox-label::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 1rem;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
