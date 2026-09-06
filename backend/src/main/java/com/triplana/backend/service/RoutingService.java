@@ -5,6 +5,8 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triplana.backend.dto.request.ComputeRouteRequest;
+import com.triplana.backend.dto.request.LatLng;
 import com.triplana.backend.dto.response.RouteLegResponse;
 import com.triplana.backend.dto.response.RouteResponse;
 import com.triplana.backend.dto.response.RouteStepResponse;
@@ -32,15 +34,24 @@ public class RoutingService {
     }
 
 
-    public RouteResponse computeRoute(Double originLat, Double originLng, Double destLat, Double destLng, String travelMode) throws Exception {
+    public RouteResponse computeRoute(ComputeRouteRequest request) throws Exception {
         // building thr request body
-        Map<String, Object> origin = Map.of("location", Map.of("latLng", Map.of("latitude", originLat, "longitude", originLng)));
-        Map<String, Object> destination = Map.of("location", Map.of("latLng", Map.of("latitude", destLat, "longitude", destLng)));
+        Map<String, Object> origin = Map.of("location", Map.of("latLng", Map.of("latitude", request.getOriginLat(), "longitude", request.getOriginLng())));
+        Map<String, Object> destination = Map.of("location", Map.of("latLng", Map.of("latitude", request.getDestLat(), "longitude", request.getDestLng())));
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("origin", origin);
         requestBody.put("destination", destination);
-        requestBody.put("travelMode", travelMode);
+        requestBody.put("travelMode", request.getTravelMode());
+
+        if (request.getIntermediates() != null && !request.getIntermediates().isEmpty()) {
+            List<Map<String, Object>> intermediates = new ArrayList<>();
+            for (LatLng point : request.getIntermediates()) {
+                intermediates.add(Map.of("location", Map.of("latLng", 
+                    Map.of("latitude", point.getLatitude(), "longitude", point.getLongitude()))));
+            }
+            requestBody.put("intermediates", intermediates);
+        }
 
         // building the headers
         HttpHeaders headers = new HttpHeaders();
@@ -67,7 +78,7 @@ public class RoutingService {
 
         for (Map<String, Object> leg : legs) {
             RouteLegResponse legResponse = new RouteLegResponse();
-            legResponse.setDistanceMeters((Integer) leg.get("distanceMeters"));
+            legResponse.setDistanceMeters(leg.get("distanceMeters") != null ? ((Number) leg.get("distanceMeters")).intValue() : 0);
             legResponse.setDuration((String) leg.get("duration"));
 
             Map<String, Object> localizedValues = mapper.convertValue(leg.get("localizedValues"), new TypeReference<Map<String, Object>>() {});
@@ -76,13 +87,13 @@ public class RoutingService {
             legResponse.setDistanceText((String) distanceMap.get("text"));
             legResponse.setDurationText((String) durationMap.get("text"));
 
-            // parisng steps
+            // parsing steps
             List<Map<String, Object>> steps = mapper.convertValue(leg.get("steps"), new TypeReference<List<Map<String, Object>>>() {});
             List<RouteStepResponse> stepResponses = new ArrayList<>();
 
             for (Map<String, Object> step : steps) {
                 RouteStepResponse stepResponse = new RouteStepResponse();
-                stepResponse.setDistanceMeters((Integer) step.get("distanceMeters"));
+                stepResponse.setDistanceMeters(step.get("distanceMeters") != null ? ((Number) step.get("distanceMeters")).intValue() : 0);
                 stepResponse.setDuration((String) step.get("staticDuration"));
                 stepResponse.setTravelMode((String) step.get("travelMode"));
 
@@ -101,7 +112,7 @@ public class RoutingService {
 
         // building final response
         RouteResponse routeResponse = new RouteResponse();
-        routeResponse.setDistanceMeters((Integer) route.get("distanceMeters"));
+        routeResponse.setDistanceMeters(((Number) route.get("distanceMeters")).intValue());
         routeResponse.setDuration((String) route.get("duration"));
         routeResponse.setEncodedPolyline((String) polyline.get("encodedPolyline"));
         routeResponse.setLegs(legResponses);

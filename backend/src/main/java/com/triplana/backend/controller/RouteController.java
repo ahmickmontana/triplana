@@ -21,8 +21,7 @@ public class RouteController {
 
     @PostMapping("/compute")
     public ResponseEntity<RouteResponse> computeRoute(@RequestBody ComputeRouteRequest request) throws Exception {
-        RouteResponse response = routingService.computeRoute(
-            request.getOriginLat(), request.getOriginLng(), request.getDestLat(), request.getDestLng(), request.getTravelMode());
+        RouteResponse response = routingService.computeRoute(request);
 
         return ResponseEntity.ok(response);
     }

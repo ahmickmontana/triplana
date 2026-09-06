@@ -3,6 +3,7 @@ import { Map, AdvancedMarker, Polyline } from '@vis.gl/react-google-maps';
 import { decode } from '@googlemaps/polyline-codec';
 import { getTrip, getTripDays } from '../../api/tripApi';
 import { getActivities, deleteActivity } from '../../api/activityApi';
+import { getAccommodations } from '../../api/accommodationApi';
 import { computeRoute } from '../../api/routingApi';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -20,26 +21,35 @@ export default function TripPlannerPage() {
     const [days, setDays] = useState([]);
     const [selectedDay, setSelectedDay] = useState(null);
     const [activities, setActivities] = useState([]);
+    const [selectedActivities, setSelectedActivities] = useState([]);
     const [selectedActivityIds, setSelectedActivityIds] = useState([]);
 
     const [showAddActivityModal, setShowAddActivityModal] = useState(false);
     const [editingActivity, setEditingActivity] = useState(null);
     const [deletingActivityId, setDeletingActivityId] = useState(null);
 
+    const [accommodations, setAccommodations] = useState([]);
     const [viewingAccommodations, setViewingAccommodations] = useState(false);
     const [showAddAccommodation, setShowAddAccommodation] = useState(false);
     const [showEditAccommodation, setShowEditAccommodation] = useState(false);
     const [editingAccommodation, setEditingAccommodation] = useState(null);
 
     const [route, setRoute] = useState(null);
+    const [canShowRoute, setCanShowRoute] = useState(false);
+    const [includeAccommodation, setIncludeAccommodation] = useState(false);
+
+    const currentAccommodation = accommodations?.find(a => {
+        const day = new Date(selectedDay.date);
+        const checkIn = new Date(a.checkInDate);
+        const checkOut = new Date(a.checkOutDate);
+        return day >= checkIn && day <= checkOut;
+    });
+    
 
     const sortedActivities = [
         ...activities.filter(a => a.startTime !== null).sort((a, b) => a.startTime.localeCompare(b.startTime)),
         ...activities.filter(a => a.startTime === null)
     ];
-
-    const selectedActivities = sortedActivities
-    .filter(a => selectedActivityIds.includes(a.id) && a.latitude && a.longitude);
 
     useEffect(() => {
         const fetchTrip = async () => {
@@ -59,6 +69,14 @@ export default function TripPlannerPage() {
     }, [id]);
 
     useEffect(() => {
+        const fetchAccommodations = async () => {
+            const response = await getAccommodations(trip.id);
+            setAccommodations(response.data);
+        };
+        fetchAccommodations();
+    }, [trip]);
+
+    useEffect(() => {
         if (!selectedDay) return;
         fetchActivities();
     }, [selectedDay]);
@@ -66,6 +84,17 @@ export default function TripPlannerPage() {
     useEffect(() => {
         setRoute(null);
     }, [selectedActivityIds]);
+
+    useEffect(() => {
+        const eligible = selectedActivityIds.filter(actId => {
+            const a = sortedActivities.find(a => a.id === actId);
+            return a && a.latitude && a.longitude;
+        });
+        
+        const hasAccommodation = includeAccommodation && currentAccommodation?.latitude && currentAccommodation?.longitude;
+        
+        setCanShowRoute(eligible.length >= 2 || (eligible.length >= 1 && hasAccommodation));
+    }, [selectedActivityIds, activities, includeAccommodation, currentAccommodation]);
 
     const fetchActivities = async () => {
         if (!selectedDay) return;
@@ -156,31 +185,50 @@ export default function TripPlannerPage() {
                 ? prev.filter(id => id !== activityId)
                 : [...prev, activityId]
         );
-
-        console.log(selectedActivityIds);
     };
 
     const handleShowRoute = async () => {
         try {
-            const selectedActivities = sortedActivities
+            let activitiesForRoute = sortedActivities
                 .filter(a => selectedActivityIds.includes(a.id) && a.latitude && a.longitude);
 
-            if (selectedActivities.length < 2) return;
+            if (includeAccommodation && currentAccommodation?.latitude && currentAccommodation?.longitude) {
+                const accommodationStop = { 
+                    id: 'accommodation',
+                    title: currentAccommodation.name,
+                    locationName: currentAccommodation.locationName,
+                    latitude: currentAccommodation.latitude,
+                    longitude: currentAccommodation.longitude
+                };
+                activitiesForRoute = [
+                    { ...accommodationStop, id: 'accommodation-start' },
+                    ...activitiesForRoute,
+                    { ...accommodationStop, id: 'accommodation-end' }
+                ];
+            }
+
+            if (activitiesForRoute.length < 2) return;
+
+            const origin = activitiesForRoute[0];
+            const destination = activitiesForRoute[activitiesForRoute.length - 1];
+            const intermediates = activitiesForRoute.slice(1, -1).map(a => ({
+                latitude: a.latitude,
+                longitude: a.longitude
+            }));
 
             const response = await computeRoute({
-                originLat: selectedActivities[0].latitude,
-                originLng: selectedActivities[0].longitude,
-                destLat: selectedActivities[selectedActivities.length - 1].latitude,
-                destLng: selectedActivities[selectedActivities.length - 1].longitude,
+                originLat: origin.latitude,
+                originLng: origin.longitude,
+                destLat: destination.latitude,
+                destLng: destination.longitude,
+                intermediates,
                 travelMode: 'WALK'
             });
 
-            console.log(response.data);
             setRoute(response.data);
+            setSelectedActivities(activitiesForRoute);
         } catch (error) {
-            if (error.response?.data) {
-                console.log(error.response.data);
-            }
+            console.log(error.response?.data);
         }
     }
 
@@ -224,7 +272,7 @@ export default function TripPlannerPage() {
                                                     onEditAccommodation={handleEditAccommodation}
                 />}
 
-                 {showAddAccommodation && <AddAccommodationModal 
+                {showAddAccommodation && <AddAccommodationModal 
                                                     tripId={trip.id}
                                                     onClose={() => setShowAddAccommodation(false)}
                                                     onAccommodationAdded={handleAccommodationAdded}
@@ -284,7 +332,7 @@ export default function TripPlannerPage() {
                             ) : (
 
                                 sortedActivities.map(activity => (
-                                    <>
+                                    <div key={activity.id}>
                                         {deletingActivityId === activity.id ? (
                                                 <div className="delete-activity-message activity-confirm-delete">
                                                     <p className="delete-title">Are you sure you want to delete this activity?</p>
@@ -332,7 +380,7 @@ export default function TripPlannerPage() {
                                                     </div>
                                                 )
                                             }
-                                        </>
+                                        </div>
                                 ))
                             )
                         }
@@ -349,6 +397,14 @@ export default function TripPlannerPage() {
                             gestureHandling="greedy"
                             mapId="triplana-map"
                         >
+                            {currentAccommodation?.latitude && currentAccommodation?.longitude && (
+                                <AdvancedMarker
+                                        position={{ lat: currentAccommodation.latitude, lng: currentAccommodation.longitude }}
+                                    >
+                                        <div className="accommodation-pin">🏠</div>
+                                    </AdvancedMarker>
+                            )}
+
                             {sortedActivities
                                 .filter(a => a.latitude && a.longitude)
                                 .map((activity, index) => (
@@ -356,7 +412,7 @@ export default function TripPlannerPage() {
                                         key={activity.id}
                                         position={{ lat: activity.latitude, lng: activity.longitude }}
                                     >
-                                        <div className="activity-pin">
+                                        <div className={`activity-pin ${selectedActivityIds.includes(activity.id) ? 'activity-pin-selected' : ''}`}>
                                             {index + 1}
                                         </div>
                                     </AdvancedMarker>
@@ -373,7 +429,7 @@ export default function TripPlannerPage() {
                         </Map>
                     </div>
                     <div className="trip-route">
-                        {route && (
+                        {route ? (
                             <div className="route-details">
                                 {selectedActivities.map((activity, index) => (
                                     <div key={activity.id}>
@@ -383,30 +439,40 @@ export default function TripPlannerPage() {
                                         </div>
                                         {index < selectedActivities.length - 1 && (
                                             <div className="route-travel">
-                                                <div className="route-arrow">↓</div>
+                                                <div className="route-line" />
                                                 <div className="route-segment">
                                                     <p>{route.legs[index]?.distanceText}</p>
                                                     <p>•</p>
-                                                    <p>{formatDuration(route.legs[index]?.duration)}</p>
+                                                    <p>{route.legs[index] ? formatDuration(route.legs[index].duration) : ''}</p>
                                                     <p>•</p>
                                                     <p>🚶 Walking</p>
                                                 </div>
-                                                <div className="route-arrow">↓</div>
+                                                <div className="route-line" />
                                             </div>
                                         )}
                                     </div>
                                 ))}
                             </div>
-                        )}
-                        {selectedActivityIds.length >= 2 && (
-                            <div className="route-footer">
-                                {selectedActivityIds.length >= 2 && (
-                                    <button className="activity-btn-add" onClick={handleShowRoute}>
-                                        Show Route
-                                    </button>
-                                )}
+                        ) : 
+                        <div className="route-details-empty">
+                            <p className="no-route">No route generated yet.</p>
+                        </div>}
+                        <div className="route-footer">
+                            <div className="accommodation-checkbox">
+                                <input 
+                                    className="activity-route-checkbox"
+                                    type="checkbox"
+                                    id="checkbox-accommmodation-id"
+                                    checked={includeAccommodation}
+                                    onChange={() => setIncludeAccommodation(!includeAccommodation)}
+                                />
+                                <label htmlFor="checkbox-accommmodation-id" className="checkbox-label"/>
+                                <p className="checkbox-label-text">Include Accommodation in Route?</p>
                             </div>
-                        )}
+                            <button className="activity-btn-add" onClick={handleShowRoute} disabled={!canShowRoute}>
+                                Show Route
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
