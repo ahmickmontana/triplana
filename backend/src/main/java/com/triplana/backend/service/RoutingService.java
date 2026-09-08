@@ -35,7 +35,6 @@ public class RoutingService {
 
 
     public RouteResponse computeRoute(ComputeRouteRequest request) throws Exception {
-        // building thr request body
         Map<String, Object> origin = Map.of("location", Map.of("latLng", Map.of("latitude", request.getOriginLat(), "longitude", request.getOriginLng())));
         Map<String, Object> destination = Map.of("location", Map.of("latLng", Map.of("latitude", request.getDestLat(), "longitude", request.getDestLng())));
 
@@ -53,26 +52,34 @@ public class RoutingService {
             requestBody.put("intermediates", intermediates);
         }
 
-        // building the headers
+        if ("TRANSIT".equals(request.getTravelMode())) {
+            Map<String, Object> transitPreferences = new HashMap<>();
+            if (request.getAllowedTravelModes() != null && !request.getAllowedTravelModes().isEmpty()) {
+                transitPreferences.put("allowedTravelModes", request.getAllowedTravelModes());
+            }
+            if (request.getRoutingPreference() != null && !request.getRoutingPreference().isEmpty()) {
+                transitPreferences.put("routingPreference", request.getRoutingPreference());
+            }
+            if (!transitPreferences.isEmpty()) {
+                requestBody.put("transitPreferences", transitPreferences);
+            }
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-Goog-Api-Key", apiKey);
-        headers.set("X-Goog-FieldMask", "routes.duration,routes.distanceMeters,routes.polyline,routes.legs.distanceMeters,routes.legs.duration,routes.legs.localizedValues,routes.legs.steps.distanceMeters,routes.legs.steps.staticDuration,routes.legs.steps.navigationInstruction,routes.legs.steps.travelMode");
+        headers.set("X-Goog-FieldMask", "routes.duration,routes.distanceMeters,routes.polyline,routes.legs.distanceMeters,routes.legs.duration,routes.legs.localizedValues,routes.legs.steps.distanceMeters,routes.legs.steps.staticDuration,routes.legs.steps.navigationInstruction,routes.legs.steps.travelMode,routes.legs.steps.transitDetails");
 
-        // making the POST request
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
         String response = restTemplate.postForObject("https://routes.googleapis.com/directions/v2:computeRoutes", entity, String.class);
 
-        // parsing the response
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> body = mapper.readValue(response, new TypeReference<Map<String, Object>>() {});
         List<Map<String, Object>> routes = mapper.convertValue(body.get("routes"), new TypeReference<List<Map<String, Object>>>() {});
         Map<String, Object> route = routes.get(0);
 
-        // parsing polyline
         Map<String, Object> polyline = mapper.convertValue(route.get("polyline"), new TypeReference<Map<String, Object>>() {});
 
-        // parsing legs
         List<Map<String, Object>> legs = mapper.convertValue(route.get("legs"), new TypeReference<List<Map<String, Object>>>() {});
         List<RouteLegResponse> legResponses = new ArrayList<>();
 
@@ -87,7 +94,6 @@ public class RoutingService {
             legResponse.setDistanceText((String) distanceMap.get("text"));
             legResponse.setDurationText((String) durationMap.get("text"));
 
-            // parsing steps
             List<Map<String, Object>> steps = mapper.convertValue(leg.get("steps"), new TypeReference<List<Map<String, Object>>>() {});
             List<RouteStepResponse> stepResponses = new ArrayList<>();
 
@@ -103,6 +109,29 @@ public class RoutingService {
                     stepResponse.setManeuver((String) navInstruction.get("maneuver"));
                 }
 
+                Map<String, Object> transitDetails = mapper.convertValue(step.get("transitDetails"), new TypeReference<Map<String, Object>>() {});
+                if (transitDetails != null) {
+                    Map<String, Object> transitLine = mapper.convertValue(transitDetails.get("transitLine"), new TypeReference<Map<String, Object>>() {});
+                    Map<String, Object> stopDetails = mapper.convertValue(transitDetails.get("stopDetails"), new TypeReference<Map<String, Object>>() {});
+
+                    if (transitLine != null) {
+                        stepResponse.setTransitLine((String) transitLine.get("name"));
+                        Map<String, Object> vehicle = mapper.convertValue(transitLine.get("vehicle"), new TypeReference<Map<String, Object>>() {});
+                        if (vehicle != null) {
+                            stepResponse.setVehicleType((String) vehicle.get("type"));
+                        }
+                    }
+
+                    if (stopDetails != null) {
+                        Map<String, Object> departureStop = mapper.convertValue(stopDetails.get("departureStop"), new TypeReference<Map<String, Object>>() {});
+                        Map<String, Object> arrivalStop = mapper.convertValue(stopDetails.get("arrivalStop"), new TypeReference<Map<String, Object>>() {});
+                        if (departureStop != null) stepResponse.setDepartureStop((String) departureStop.get("name"));
+                        if (arrivalStop != null) stepResponse.setArrivalStop((String) arrivalStop.get("name"));
+                    }
+
+                    stepResponse.setNumStops((Integer) transitDetails.get("numStops"));
+                }
+
                 stepResponses.add(stepResponse);
             }
 
@@ -110,7 +139,6 @@ public class RoutingService {
             legResponses.add(legResponse);
         }
 
-        // building final response
         RouteResponse routeResponse = new RouteResponse();
         routeResponse.setDistanceMeters(((Number) route.get("distanceMeters")).intValue());
         routeResponse.setDuration((String) route.get("duration"));

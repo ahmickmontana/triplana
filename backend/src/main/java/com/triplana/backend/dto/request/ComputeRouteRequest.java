@@ -12,4 +12,6 @@ public class ComputeRouteRequest {
     private Double destLng;
     private List<LatLng> intermediates;
     private String travelMode;
+    private String routingPreference;
+private List<String> allowedTravelModes;
 }
