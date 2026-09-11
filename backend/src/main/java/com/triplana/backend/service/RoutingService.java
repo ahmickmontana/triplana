@@ -10,6 +10,7 @@ import com.triplana.backend.dto.request.LatLng;
 import com.triplana.backend.dto.response.RouteLegResponse;
 import com.triplana.backend.dto.response.RouteResponse;
 import com.triplana.backend.dto.response.RouteStepResponse;
+import com.triplana.backend.exception.AuthException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,24 +36,67 @@ public class RoutingService {
 
 
     public RouteResponse computeRoute(ComputeRouteRequest request) throws Exception {
+        System.out.println("Strategy: " + request.getStrategy());
+        System.out.println("TravelMode: " + request.getTravelMode());
+
+        if ("fastest".equals(request.getStrategy())) {
+            return computeFastestRoute(request);
+        }
+        return computeSingleRoute(request, request.getTravelMode());
+    }
+
+    private RouteResponse computeFastestRoute(ComputeRouteRequest request) throws Exception {
+        List<String> modes = new ArrayList<>(List.of("WALK", "TRANSIT"));
+        if (request.getAllowedTravelModes() != null && request.getAllowedTravelModes().contains("DRIVE")) {
+            modes.add("DRIVE");
+        }
+        RouteResponse fastest = null;
+        int fastestSeconds = Integer.MAX_VALUE;
+
+        for (String mode : modes) {
+            try {
+                RouteResponse response = computeSingleRoute(request, mode);
+                System.out.println("Mode: " + mode + " Duration: " + response.getDuration());
+
+                if (response != null) {
+                    int seconds = Integer.parseInt(response.getDuration().replace("s", ""));
+                    if (seconds < fastestSeconds) {
+                        fastestSeconds = seconds;
+                        fastest = response;
+                    }
+                }
+            } catch (Exception e) {
+                // skip unavailable modes
+                System.out.println("Mode: " + mode + " failed: " + e.getMessage());
+            }
+        }
+
+        if (fastest == null) {
+            throw new AuthException("No route available with the selected preferences.");
+        }
+
+        return fastest;
+    }
+
+    private RouteResponse computeSingleRoute(ComputeRouteRequest request, String travelMode) throws Exception {
         Map<String, Object> origin = Map.of("location", Map.of("latLng", Map.of("latitude", request.getOriginLat(), "longitude", request.getOriginLng())));
         Map<String, Object> destination = Map.of("location", Map.of("latLng", Map.of("latitude", request.getDestLat(), "longitude", request.getDestLng())));
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("origin", origin);
         requestBody.put("destination", destination);
-        requestBody.put("travelMode", request.getTravelMode());
+        requestBody.put("travelMode", travelMode);
 
-        if (request.getIntermediates() != null && !request.getIntermediates().isEmpty()) {
+        if (request.getIntermediates() != null && !request.getIntermediates().isEmpty() && !"TRANSIT".equals(travelMode)) {
             List<Map<String, Object>> intermediates = new ArrayList<>();
             for (LatLng point : request.getIntermediates()) {
-                intermediates.add(Map.of("location", Map.of("latLng", 
+                intermediates.add(Map.of("location", Map.of("latLng",
                     Map.of("latitude", point.getLatitude(), "longitude", point.getLongitude()))));
             }
             requestBody.put("intermediates", intermediates);
         }
 
-        if ("TRANSIT".equals(request.getTravelMode())) {
+        if ("TRANSIT".equals(travelMode)) {
             Map<String, Object> transitPreferences = new HashMap<>();
             if (request.getAllowedTravelModes() != null && !request.getAllowedTravelModes().isEmpty()) {
                 transitPreferences.put("allowedTravelModes", request.getAllowedTravelModes());
@@ -76,8 +120,12 @@ public class RoutingService {
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> body = mapper.readValue(response, new TypeReference<Map<String, Object>>() {});
         List<Map<String, Object>> routes = mapper.convertValue(body.get("routes"), new TypeReference<List<Map<String, Object>>>() {});
-        Map<String, Object> route = routes.get(0);
 
+        if (routes == null || routes.isEmpty()) {
+            return null;
+        }
+
+        Map<String, Object> route = routes.get(0);
         Map<String, Object> polyline = mapper.convertValue(route.get("polyline"), new TypeReference<Map<String, Object>>() {});
 
         List<Map<String, Object>> legs = mapper.convertValue(route.get("legs"), new TypeReference<List<Map<String, Object>>>() {});

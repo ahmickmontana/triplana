@@ -13,6 +13,7 @@ import EditActivityModal from './EditActivityModal';
 import ViewAccommodations from './ViewAccommodationsModal';
 import AddAccommodationModal from './AddAccommodationModal';
 import EditAccommodationModal from './EditAccommodationModal';
+import RouteSettingsModal from './RouteSettingsModal';
 
 
 export default function TripPlannerPage() {
@@ -36,7 +37,13 @@ export default function TripPlannerPage() {
 
     const [route, setRoute] = useState(null);
     const [canShowRoute, setCanShowRoute] = useState(false);
+    const [showRouteSettings, setShowRouteSettings] = useState(false);
     const [includeAccommodation, setIncludeAccommodation] = useState(false);
+    const [routeSettings, setRouteSettings] = useState({
+        travelMode: 'TRANSIT',
+        routingPreference: null,
+        allowedModes: ['BUS', 'SUBWAY', 'TRAIN', 'LIGHT_RAIL', 'DRIVE']
+    });
 
     const currentAccommodation = accommodations?.find(a => {
         const day = new Date(selectedDay.date);
@@ -69,6 +76,7 @@ export default function TripPlannerPage() {
     }, [id]);
 
     useEffect(() => {
+        if (!trip) return;
         const fetchAccommodations = async () => {
             const response = await getAccommodations(trip.id);
             setAccommodations(response.data);
@@ -95,6 +103,14 @@ export default function TripPlannerPage() {
         
         setCanShowRoute(eligible.length >= 2 || (eligible.length >= 1 && hasAccommodation));
     }, [selectedActivityIds, activities, includeAccommodation, currentAccommodation]);
+
+    useEffect(() => {
+        const saved = localStorage.getItem(`triplana-route-settings-${id}`);
+        if (saved) {
+            setRouteSettings(JSON.parse(saved));
+        }
+    }, [id]);
+
 
     const fetchActivities = async () => {
         if (!selectedDay) return;
@@ -187,7 +203,8 @@ export default function TripPlannerPage() {
         );
     };
 
-    const handleShowRoute = async () => {
+    const handleShowRoute = async (overrideSettings = null) => {
+        const settings = overrideSettings || routeSettings
         try {
             let activitiesForRoute = sortedActivities
                 .filter(a => selectedActivityIds.includes(a.id) && a.latitude && a.longitude);
@@ -216,13 +233,18 @@ export default function TripPlannerPage() {
                 longitude: a.longitude
             }));
 
+            console.log('settings:', settings);
+
             const response = await computeRoute({
                 originLat: origin.latitude,
                 originLng: origin.longitude,
                 destLat: destination.latitude,
                 destLng: destination.longitude,
                 intermediates,
-                travelMode: 'WALK'
+                strategy: settings.strategy,
+                travelMode: settings.travelMode,
+                routingPreference: settings.routingPreference,
+                allowedTravelModes: settings.allowedModes
             });
 
             setRoute(response.data);
@@ -294,6 +316,20 @@ export default function TripPlannerPage() {
                         onActivityEdited={fetchActivities}
                     />
                 )}
+
+                {showRouteSettings && (
+                <RouteSettingsModal
+                    tripId={id}
+                    onClose={() => setShowRouteSettings(false)}
+                    onConfirm={async (settings) => {
+                        setRouteSettings(settings);
+                        setShowRouteSettings(false);
+                        if (route) {
+                            await handleShowRoute(settings);
+                        }
+                    }}
+                />
+            )}
 
                 <div className="planner-header">
                     <div className="planner-header-info">
@@ -429,6 +465,11 @@ export default function TripPlannerPage() {
                         </Map>
                     </div>
                     <div className="trip-route">
+                        <div className="route-header">
+                            <button className="route-settings-btn" onClick={() => setShowRouteSettings(true)}>
+                                ⚙️
+                            </button>
+                        </div>
                         {route ? (
                             <div className="route-details">
                                 {selectedActivities.map((activity, index) => (
@@ -445,7 +486,7 @@ export default function TripPlannerPage() {
                                                     <p>•</p>
                                                     <p>{route.legs[index] ? formatDuration(route.legs[index].duration) : ''}</p>
                                                     <p>•</p>
-                                                    <p>🚶 Walking</p>
+                                                    <p>{route.legs[index]?.steps[0]?.travelMode?.charAt(0).toUpperCase() + route.legs[index]?.steps[0]?.travelMode?.slice(1).toLowerCase()}</p>
                                                 </div>
                                                 <div className="route-line" />
                                             </div>
@@ -469,7 +510,7 @@ export default function TripPlannerPage() {
                                 <label htmlFor="checkbox-accommmodation-id" className="checkbox-label"/>
                                 <p className="checkbox-label-text">Include Accommodation in Route?</p>
                             </div>
-                            <button className="activity-btn-add" onClick={handleShowRoute} disabled={!canShowRoute}>
+                            <button className="activity-btn-add" onClick={() => handleShowRoute()} disabled={!canShowRoute}>
                                 Show Route
                             </button>
                         </div>
