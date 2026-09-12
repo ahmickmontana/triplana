@@ -40,6 +40,7 @@ export default function TripPlannerPage() {
     const [showRouteSettings, setShowRouteSettings] = useState(false);
     const [includeAccommodation, setIncludeAccommodation] = useState(false);
     const [routeSettings, setRouteSettings] = useState({
+        strategy: 'fastest',
         travelMode: 'TRANSIT',
         routingPreference: null,
         allowedModes: ['BUS', 'SUBWAY', 'TRAIN', 'LIGHT_RAIL', 'DRIVE']
@@ -61,7 +62,6 @@ export default function TripPlannerPage() {
     useEffect(() => {
         const fetchTrip = async () => {
             const response = await getTrip(id);
-            console.log(response);
             setTrip(response.data);
         };
 
@@ -233,8 +233,6 @@ export default function TripPlannerPage() {
                 longitude: a.longitude
             }));
 
-            console.log('settings:', settings);
-
             const response = await computeRoute({
                 originLat: origin.latitude,
                 originLng: origin.longitude,
@@ -270,6 +268,12 @@ export default function TripPlannerPage() {
         
         if (hours > 0) return `${hours}h ${minutes}min`;
         return `${minutes}min`;
+    };
+
+    const getMainTravelMode = (leg) => {
+        if (!leg?.steps) return 'WALK';
+        const transitStep = leg.steps.find(s => s.travelMode !== 'WALK');
+        return transitStep?.travelMode || 'WALK';
     };
 
     if (!trip) return null;
@@ -456,11 +460,22 @@ export default function TripPlannerPage() {
                             }
 
                             {route && (
-                                <Polyline
-                                    path={decode(route.encodedPolyline).map(([lat, lng]) => ({ lat, lng }))}
-                                    strokeColor="#3B82F6"
-                                    strokeWeight={4}
-                                />
+                                route.polylines?.length > 0 
+                                    ? route.polylines.map((poly, i) => (
+                                        <Polyline
+                                            key={i}
+                                            path={decode(poly).map(([lat, lng]) => ({ lat, lng }))}
+                                            strokeColor="#3B82F6"
+                                            strokeWeight={4}
+                                        />
+                                    ))
+                                    : route.encodedPolyline && (
+                                        <Polyline
+                                            path={decode(route.encodedPolyline).map(([lat, lng]) => ({ lat, lng }))}
+                                            strokeColor="#3B82F6"
+                                            strokeWeight={4}
+                                        />
+                                    )
                             )}
                         </Map>
                     </div>
@@ -486,7 +501,7 @@ export default function TripPlannerPage() {
                                                     <p>•</p>
                                                     <p>{route.legs[index] ? formatDuration(route.legs[index].duration) : ''}</p>
                                                     <p>•</p>
-                                                    <p>{route.legs[index]?.steps[0]?.travelMode?.charAt(0).toUpperCase() + route.legs[index]?.steps[0]?.travelMode?.slice(1).toLowerCase()}</p>
+                                                    <p>{getMainTravelMode(route.legs[index])?.charAt(0).toUpperCase() + getMainTravelMode(route.legs[index])?.slice(1).toLowerCase()}</p>
                                                 </div>
                                                 <div className="route-line" />
                                             </div>

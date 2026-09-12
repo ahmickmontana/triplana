@@ -30,7 +30,6 @@ export default function ViewAccommodations({ tripId, selectedDay, onClose, onAdd
 
     const fetchAccommodations = async () => {
         const response = await getAccommodations(tripId);
-        console.log(response);
         setAccommodations(response.data);
     };
 

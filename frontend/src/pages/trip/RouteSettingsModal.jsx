@@ -29,7 +29,7 @@ export default function RouteSettingsModal({ tripId, onClose, onConfirm }) {
     const handleConfirm = () => {
         const settings = {
             strategy: strategy,
-            travelMode: strategy === 'walking' ? 'WALK' : strategy === 'driving' ? 'DRIVE' : strategy === 'cycling' ? 'BICYCLE' : 'TRANSIT',
+            travelMode: strategy === 'walking' ? 'WALK' : strategy === 'driving' ? 'DRIVE' : 'TRANSIT',
             routingPreference: strategy === 'lesswalking' ? 'LESS_WALKING' : strategy === 'fewertransfers' ? 'FEWER_TRANSFERS' : null,
             allowedModes: ['fastest', 'lesswalking', 'fewertransfers'].includes(strategy) ? allowedModes : null
         };
@@ -49,6 +49,7 @@ export default function RouteSettingsModal({ tripId, onClose, onConfirm }) {
                             <option value="lesswalking">Least Walking</option>
                             <option value="fewertransfers">Fewer Transfers</option>
                             <option value="walking">Walking Only</option>
+                            <option value="transitonly">Transit Only</option>
                             <option value="driving">Driving Only</option>
                         </select>
                     </div>

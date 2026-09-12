@@ -10,4 +10,5 @@ public class RouteResponse {
     private String duration;
     private String encodedPolyline;
     private List<RouteLegResponse> legs;
+    private List<String> polylines;
 }

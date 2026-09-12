@@ -36,11 +36,10 @@ public class RoutingService {
 
 
     public RouteResponse computeRoute(ComputeRouteRequest request) throws Exception {
-        System.out.println("Strategy: " + request.getStrategy());
-        System.out.println("TravelMode: " + request.getTravelMode());
-
         if ("fastest".equals(request.getStrategy())) {
             return computeFastestRoute(request);
+        } else if ("transitonly".equals(request.getStrategy())) {
+            return computeTransitSegments(request);
         }
         return computeSingleRoute(request, request.getTravelMode());
     }
@@ -55,8 +54,12 @@ public class RoutingService {
 
         for (String mode : modes) {
             try {
-                RouteResponse response = computeSingleRoute(request, mode);
-                System.out.println("Mode: " + mode + " Duration: " + response.getDuration());
+                RouteResponse response;
+                if ("TRANSIT".equals(mode)) {
+                    response = computeTransitSegments(request);
+                } else {
+                    response = computeSingleRoute(request, mode);
+                }
 
                 if (response != null) {
                     int seconds = Integer.parseInt(response.getDuration().replace("s", ""));
@@ -67,7 +70,6 @@ public class RoutingService {
                 }
             } catch (Exception e) {
                 // skip unavailable modes
-                System.out.println("Mode: " + mode + " failed: " + e.getMessage());
             }
         }
 
@@ -97,13 +99,23 @@ public class RoutingService {
         }
 
         if ("TRANSIT".equals(travelMode)) {
+            requestBody.put("departureTime", java.time.Instant.now().plusSeconds(60).toString());
+            
             Map<String, Object> transitPreferences = new HashMap<>();
+            
             if (request.getAllowedTravelModes() != null && !request.getAllowedTravelModes().isEmpty()) {
-                transitPreferences.put("allowedTravelModes", request.getAllowedTravelModes());
+                List<String> transitModes = request.getAllowedTravelModes().stream()
+                    .filter(m -> !m.equals("DRIVE"))
+                    .collect(java.util.stream.Collectors.toList());
+                if (!transitModes.isEmpty()) {
+                    transitPreferences.put("allowedTravelModes", transitModes);
+                }
             }
+            
             if (request.getRoutingPreference() != null && !request.getRoutingPreference().isEmpty()) {
                 transitPreferences.put("routingPreference", request.getRoutingPreference());
             }
+            
             if (!transitPreferences.isEmpty()) {
                 requestBody.put("transitPreferences", transitPreferences);
             }
@@ -137,10 +149,12 @@ public class RoutingService {
             legResponse.setDuration((String) leg.get("duration"));
 
             Map<String, Object> localizedValues = mapper.convertValue(leg.get("localizedValues"), new TypeReference<Map<String, Object>>() {});
-            Map<String, Object> distanceMap = mapper.convertValue(localizedValues.get("distance"), new TypeReference<Map<String, Object>>() {});
-            Map<String, Object> durationMap = mapper.convertValue(localizedValues.get("duration"), new TypeReference<Map<String, Object>>() {});
-            legResponse.setDistanceText((String) distanceMap.get("text"));
-            legResponse.setDurationText((String) durationMap.get("text"));
+            if (localizedValues != null) {
+                Map<String, Object> distanceMap = mapper.convertValue(localizedValues.get("distance"), new TypeReference<Map<String, Object>>() {});
+                Map<String, Object> durationMap = mapper.convertValue(localizedValues.get("duration"), new TypeReference<Map<String, Object>>() {});
+                if (distanceMap != null) legResponse.setDistanceText((String) distanceMap.get("text"));
+                if (durationMap != null) legResponse.setDurationText((String) durationMap.get("text"));
+            }
 
             List<Map<String, Object>> steps = mapper.convertValue(leg.get("steps"), new TypeReference<List<Map<String, Object>>>() {});
             List<RouteStepResponse> stepResponses = new ArrayList<>();
@@ -194,5 +208,54 @@ public class RoutingService {
         routeResponse.setLegs(legResponses);
 
         return routeResponse;
+    }
+
+    private RouteResponse computeTransitSegments(ComputeRouteRequest request) throws Exception {
+        List<LatLng> allPoints = new ArrayList<>();
+        allPoints.add(new LatLng(request.getOriginLat(), request.getOriginLng()));
+        if (request.getIntermediates() != null) {
+            allPoints.addAll(request.getIntermediates());
+        }
+        allPoints.add(new LatLng(request.getDestLat(), request.getDestLng()));
+
+        List<RouteLegResponse> allLegs = new ArrayList<>();
+        int totalDistance = 0;
+        int totalSeconds = 0;
+        String encodedPolyline = null;
+
+        List<String> polylines = new ArrayList<>();
+
+        for (int i = 0; i < allPoints.size() - 1; i++) {
+            ComputeRouteRequest segmentRequest = new ComputeRouteRequest();
+            segmentRequest.setOriginLat(allPoints.get(i).getLatitude());
+            segmentRequest.setOriginLng(allPoints.get(i).getLongitude());
+            segmentRequest.setDestLat(allPoints.get(i + 1).getLatitude());
+            segmentRequest.setDestLng(allPoints.get(i + 1).getLongitude());
+            segmentRequest.setTravelMode("TRANSIT");
+            segmentRequest.setRoutingPreference(request.getRoutingPreference());
+            segmentRequest.setAllowedTravelModes(request.getAllowedTravelModes());
+
+            RouteResponse segment = computeSingleRoute(segmentRequest, "TRANSIT");
+            if (segment == null) {
+                segment = computeSingleRoute(segmentRequest, "WALK");
+            }
+            if (segment != null) {
+                allLegs.addAll(segment.getLegs());
+                totalDistance += segment.getDistanceMeters();
+                totalSeconds += Integer.parseInt(segment.getDuration().replace("s", ""));
+                if (segment.getEncodedPolyline() != null) {
+                    polylines.add(segment.getEncodedPolyline());
+                }
+            }
+
+        }
+
+        RouteResponse combined = new RouteResponse();
+        combined.setDistanceMeters(totalDistance);
+        combined.setDuration(totalSeconds + "s");
+        combined.setEncodedPolyline(encodedPolyline);
+        combined.setPolylines(polylines);
+        combined.setLegs(allLegs);
+        return combined;
     }
 }
