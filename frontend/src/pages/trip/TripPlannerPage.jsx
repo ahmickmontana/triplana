@@ -5,7 +5,7 @@ import { getTrip, getTripDays } from '../../api/tripApi';
 import { getActivities, deleteActivity } from '../../api/activityApi';
 import { getAccommodations } from '../../api/accommodationApi';
 import { computeRoute } from '../../api/routingApi';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import './TripPlannerPage.css';
 import AddActivityModal from './AddActivityModal';
@@ -279,6 +279,22 @@ export default function TripPlannerPage() {
         return transitStep?.travelMode || 'WALK';
     };
 
+    const mapBounds = useMemo(() => {
+        const points = [
+            ...sortedActivities.filter(a => a.latitude && a.longitude),
+            ...(currentAccommodation?.latitude ? [currentAccommodation] : [])
+        ];
+        
+        if (points.length === 0) return null;
+        
+        return {
+            north: Math.max(...points.map(p => p.latitude)) + 0.01,
+            south: Math.min(...points.map(p => p.latitude)) - 0.01,
+            east: Math.max(...points.map(p => p.longitude)) + 0.01,
+            west: Math.min(...points.map(p => p.longitude)) - 0.01,
+        };
+    }, [sortedActivities, currentAccommodation, selectedDay]);
+
     if (!trip) return null;
 
     return (
@@ -435,8 +451,7 @@ export default function TripPlannerPage() {
                     </div>
                     <div className="trip-map">
                         <Map
-                            defaultCenter={{ lat: 35.6595, lng: 139.7004 }}
-                            defaultZoom={13}
+                            {...(mapBounds ? { defaultBounds: mapBounds } : { defaultCenter: { lat: 20, lng: 0 }, defaultZoom: 2 })}
                             style={{ width: '100%', height: '100%' }}
                             gestureHandling="greedy"
                             mapId="triplana-map"
