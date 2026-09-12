@@ -75,12 +75,13 @@ export default function TripPlannerPage() {
         fetchDays();
     }, [id]);
 
-    useEffect(() => {
-        if (!trip) return;
-        const fetchAccommodations = async () => {
+    const fetchAccommodations = async () => {
             const response = await getAccommodations(trip.id);
             setAccommodations(response.data);
         };
+
+    useEffect(() => {
+        if (!trip) return;
         fetchAccommodations();
     }, [trip]);
 
@@ -175,11 +176,13 @@ export default function TripPlannerPage() {
     const handleAccommodationAdded = () => {
         setShowAddAccommodation(false);
         setViewingAccommodations(true);
+        fetchAccommodations();
     };
 
     const handleAccommodationUpdated = () => {
         setShowEditAccommodation(false);
         setViewingAccommodations(true);
+        fetchAccommodations();
     };
 
     const handleDelete = async (activityId) => {
@@ -296,6 +299,7 @@ export default function TripPlannerPage() {
                                                     onClose={() => setViewingAccommodations(false)}
                                                     onAddAccommodation={handleAddAccommodation}
                                                     onEditAccommodation={handleEditAccommodation}
+                                                    onAccommodationChanged={fetchAccommodations}
                 />}
 
                 {showAddAccommodation && <AddAccommodationModal 

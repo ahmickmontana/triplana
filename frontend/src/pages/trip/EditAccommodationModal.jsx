@@ -4,7 +4,7 @@ import { updateAccommodation } from '../../api/accommodationApi.js'
 import LocationDropdown from '../../components/LocationDropdown.jsx';
 
 
-export default function EditAccommodationModal({ tripId, accommodation, onClose, onAccommodationUpdated }) {
+export default function EditAccommodationModal({ tripId, accommodation, onClose, onAccommodationUpdated, onAccommodationChanged }) {
     const [accommodationName, setAccommodationName] = useState(accommodation.name || '');
     const [locationName, setLocationName] = useState(accommodation.locationName || '');
     const [checkInDate, setCheckInDate] = useState(accommodation.checkInDate || '');
@@ -32,6 +32,7 @@ export default function EditAccommodationModal({ tripId, accommodation, onClose,
             });
                         
             onAccommodationUpdated();
+            onAccommodationChanged();
             onClose();
 
         } catch (error) {
