@@ -173,6 +173,7 @@ public class RoutingService {
 
                 Map<String, Object> transitDetails = mapper.convertValue(step.get("transitDetails"), new TypeReference<Map<String, Object>>() {});
                 if (transitDetails != null) {
+                    System.out.println("transitDetails: " + transitDetails);
                     Map<String, Object> transitLine = mapper.convertValue(transitDetails.get("transitLine"), new TypeReference<Map<String, Object>>() {});
                     Map<String, Object> stopDetails = mapper.convertValue(transitDetails.get("stopDetails"), new TypeReference<Map<String, Object>>() {});
 
@@ -191,7 +192,7 @@ public class RoutingService {
                         if (arrivalStop != null) stepResponse.setArrivalStop((String) arrivalStop.get("name"));
                     }
 
-                    stepResponse.setNumStops((Integer) transitDetails.get("numStops"));
+                    stepResponse.setNumStops((Integer) transitDetails.get("stopCount"));
                 }
 
                 stepResponses.add(stepResponse);

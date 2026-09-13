@@ -45,6 +45,13 @@ export default function TripPlannerPage() {
         routingPreference: null,
         allowedModes: ['BUS', 'SUBWAY', 'TRAIN', 'LIGHT_RAIL', 'DRIVE']
     });
+    const [expandedSegments, setExpandedSegments] = useState([]);
+
+    const toggleSegment = (index) => {
+        setExpandedSegments(prev => 
+            prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+        );
+    }
 
     const currentAccommodation = accommodations?.find(a => {
         const day = new Date(selectedDay.date);
@@ -111,6 +118,12 @@ export default function TripPlannerPage() {
             setRouteSettings(JSON.parse(saved));
         }
     }, [id]);
+
+    useEffect(() => {
+        if (route) {
+            console.log('steps:', route.legs[0]?.steps);
+        }
+    }, [route]);
 
 
     const fetchActivities = async () => {
@@ -514,14 +527,25 @@ export default function TripPlannerPage() {
                                         </div>
                                         {index < selectedActivities.length - 1 && (
                                             <div className="route-travel">
-                                                <div className="route-line" />
-                                                <div className="route-segment">
+                                                <div className="route-line"/>
+                                                <div className="route-segment" onClick={() => toggleSegment(index)}>
                                                     <p>{route.legs[index]?.distanceText}</p>
                                                     <p>•</p>
                                                     <p>{route.legs[index] ? formatDuration(route.legs[index].duration) : ''}</p>
                                                     <p>•</p>
                                                     <p>{getMainTravelMode(route.legs[index])?.charAt(0).toUpperCase() + getMainTravelMode(route.legs[index])?.slice(1).toLowerCase()}</p>
+                                                    <p>{expandedSegments.includes(index) ? '▲' : '▼'}</p>
                                                 </div>
+                                                {expandedSegments.includes(index) && (
+                                                    <div className="route-steps">
+                                                        {route.legs[index]?.steps.map((step, stepIndex) => (
+                                                            <div key={stepIndex} className="route-step">
+                                                                <p className="step-instruction">{step.instructions}</p>
+                                                                {step.transitLine && <p>{step.transitLine} ({step.numStops} stops)</p>}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                                 <div className="route-line" />
                                             </div>
                                         )}

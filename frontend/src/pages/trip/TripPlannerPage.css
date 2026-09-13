@@ -392,6 +392,11 @@
     gap: 2rem;
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.25rem;
+    cursor: pointer;
+}
+
+.route-segment:hover {
+    background-color: #BEBEBE;
 }
 
 .route-line {
@@ -467,4 +472,47 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+.route-steps {
+    padding: 0.5rem 1rem;
+    background-color: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.route-step {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.route-step:last-child {
+    border-bottom: none;
+}
+
+.route-step-icon {
+    font-size: 1.2rem;
+}
+
+.route-step-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.route-step-instruction {
+    font-size: 0.9rem;
+}
+
+.route-step-transit {
+    font-size: 0.8rem;
+    color: gray;
+}
+
+.step-instruction {
+    font-weight: bold;
 }
