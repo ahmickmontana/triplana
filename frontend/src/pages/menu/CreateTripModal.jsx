@@ -76,6 +76,12 @@ export default function CreateTripModal({ onClose, onTripCreated }) {
         }
     }
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleTripCreation();
+        }
+    };
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -142,6 +148,7 @@ export default function CreateTripModal({ onClose, onTripCreated }) {
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
                             className={`input-field ${errors.endDate ? 'input-error-border' : ''}`}
+                            onKeyDown={handleKeyDown}
                         />
                         {errors.endDate && <p className="input-error">{errors.endDate}</p>}
                     </div>

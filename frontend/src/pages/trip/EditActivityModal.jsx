@@ -43,6 +43,12 @@ export default function EditActivityModal({ activity, tripId, dayId, onClose, on
         }
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleUpdateActivity();
+        }
+    };
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -101,6 +107,7 @@ export default function EditActivityModal({ activity, tripId, dayId, onClose, on
                             setLongitude(place.longitude);
                             setGooglePlaceId(place.googlePlaceId);
                         }}
+                        onKeyDown={handleKeyDown}
                     />
                 </form>
                 <div className="modal-actions">

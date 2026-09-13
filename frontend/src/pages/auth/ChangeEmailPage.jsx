@@ -55,6 +55,12 @@ export default function ChangeEmailPage() {
         }
     }
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleSubmit();
+        }
+    };
+
     if (tokenValid === false) {
         return (
             <div>
@@ -112,6 +118,7 @@ export default function ChangeEmailPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="input-field"
+                                onKeyDown={handleKeyDown}
                             />
                             <button 
                                 className="show-btn"

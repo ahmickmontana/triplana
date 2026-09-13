@@ -44,6 +44,12 @@ export default function EditAccommodationModal({ tripId, accommodation, onClose,
         }
     }
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleUpdateAccommodation();
+        }
+    };
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -91,6 +97,7 @@ export default function EditAccommodationModal({ tripId, accommodation, onClose,
                             value={checkOutDate}
                             onChange={(e) => setCheckOutDate(e.target.value)}
                             className={`input-field ${errors.checkOutDate ? 'input-error-border' : ''}`}
+                            onKeyDown={handleKeyDown}
                         />
                         {errors.checkOutDate && <p className="input-error">{errors.checkOutDate}</p>}
                     </div>

@@ -29,6 +29,12 @@ export default function ForgotPasswordPage() {
             setLoading(false);
         }
     }
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleSubmit();
+        }
+    };
     
     return (
         <div>
@@ -63,6 +69,7 @@ export default function ForgotPasswordPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className={`input-field ${errors.email ? 'input-error-border' : ''}`}
+                            onKeyDown={handleKeyDown}
                         />
                         {errors.email && <p className="input-error">{errors.email}</p>}
                     </div>

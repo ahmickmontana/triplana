@@ -40,6 +40,12 @@ export default function LoginPage() {
             setLoading(false);
         }
     }
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleSubmit();
+        }
+    };
     
     return (
         <div>
@@ -84,6 +90,7 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="input-field"
+                                onKeyDown={handleKeyDown}
                             />
                             <button 
                                 className="show-btn"
