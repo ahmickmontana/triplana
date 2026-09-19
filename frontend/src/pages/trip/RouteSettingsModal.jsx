@@ -14,8 +14,6 @@ export default function RouteSettingsModal({ tripId, onClose, onConfirm }) {
             if (settings.travelMode === 'WALK') setStrategy('walking');
             else if (settings.travelMode === 'DRIVE') setStrategy('driving');
             else if (settings.travelMode === 'BICYCLE') setStrategy('cycling');
-            else if (settings.routingPreference === 'LESS_WALKING') setStrategy('lesswalking');
-            else if (settings.routingPreference === 'FEWER_TRANSFERS') setStrategy('fewertransfers');
             else setStrategy('fastest');
         }
     }, [tripId]);
@@ -30,8 +28,8 @@ export default function RouteSettingsModal({ tripId, onClose, onConfirm }) {
         const settings = {
             strategy: strategy,
             travelMode: strategy === 'walking' ? 'WALK' : strategy === 'driving' ? 'DRIVE' : 'TRANSIT',
-            routingPreference: strategy === 'lesswalking' ? 'LESS_WALKING' : strategy === 'fewertransfers' ? 'FEWER_TRANSFERS' : null,
-            allowedModes: ['fastest', 'lesswalking', 'fewertransfers'].includes(strategy) ? allowedModes : null
+            routingPreference: null,
+            allowedModes: ['fastest', 'transitonly'].includes(strategy) ? allowedModes : null
         };
         localStorage.setItem(`triplana-route-settings-${tripId}`, JSON.stringify(settings));
         onConfirm(settings);
@@ -46,8 +44,6 @@ export default function RouteSettingsModal({ tripId, onClose, onConfirm }) {
                         <label className="input-label">Transport Strategy</label>
                         <select name="strategies" id="strategies" value={strategy} onChange={(e) => setStrategy(e.target.value)}>
                             <option value="fastest">Fastest (default)</option>
-                            <option value="lesswalking">Least Walking</option>
-                            <option value="fewertransfers">Fewer Transfers</option>
                             <option value="walking">Walking Only</option>
                             <option value="transitonly">Transit Only</option>
                             <option value="driving">Driving Only</option>

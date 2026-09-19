@@ -359,6 +359,10 @@
     margin-top: 1rem;
 }
 
+.route-error {
+    color: #dc2626;
+}
+
 .route-activity-title {
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-weight: bold;
@@ -472,6 +476,17 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+.activity-route-checkbox-disabled {
+    display: none;
+}
+
+.activity-route-checkbox-disabled + .checkbox-label {
+    border-color: #7c7d80;
+    background-color: #f1f5f9;
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 .route-steps {

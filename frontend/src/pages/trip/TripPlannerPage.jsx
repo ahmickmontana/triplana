@@ -47,6 +47,8 @@ export default function TripPlannerPage() {
     });
     const [expandedSegments, setExpandedSegments] = useState([]);
 
+    const [routeError, setRouteError] = useState(null);
+
     const toggleSegment = (index) => {
         setExpandedSegments(prev => 
             prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
@@ -261,9 +263,12 @@ export default function TripPlannerPage() {
                 allowedTravelModes: settings.allowedModes
             });
 
+            setRouteError(null);
             setRoute(response.data);
             setSelectedActivities(activitiesForRoute);
+            console.log("hi");
         } catch (error) {
+            setRouteError('Unable to retrieve route.');
             console.log(error.response?.data);
         }
     }
@@ -417,13 +422,15 @@ export default function TripPlannerPage() {
                                                 </div>
                                                 ) : (
                                                     <div className="activity-content" key={activity.id}>
-                                                        <div className="activity-checkbox">
+                                                        <div className="activity-checkbox" title={!activity.latitude || !activity.longitude ? 'No location specified' : ''}>
                                                             <input 
-                                                                className="activity-route-checkbox"
+                                                                className={`${!activity.latitude || !activity.longitude ? 'activity-route-checkbox-disabled' : 'activity-route-checkbox'}`}
                                                                 type="checkbox"
                                                                 id={`checkbox-${activity.id}`}
                                                                 checked={selectedActivityIds.includes(activity.id)}
                                                                 onChange={() => toggleActivity(activity.id)}
+                                                                disabled={!activity.latitude || !activity.longitude}
+                                                                title={!activity.latitude || !activity.longitude ? 'No location specified' : ''}
                                                             />
                                                             <label htmlFor={`checkbox-${activity.id}`} className="checkbox-label" />
                                                         </div>
@@ -554,8 +561,21 @@ export default function TripPlannerPage() {
                             </div>
                         ) : 
                         <div className="route-details-empty">
-                            <p className="no-route">No route generated yet.</p>
+                            {routeError && (
+                                <div className="map-error">
+                                    <p className="route-error">{routeError}</p>
+                                </div>
+                            )}
+                            {routeError === null && (
+                                <p className="no-route">No route generated yet.</p>
+                            )}
                         </div>}
+
+                        {routeError && (
+                            <div className="map-error">
+                                <p>{routeError}</p>
+                            </div>
+                        )}
                         <div className="route-footer">
                             <div className="accommodation-checkbox">
                                 <input 
