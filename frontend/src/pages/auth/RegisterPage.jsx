@@ -32,6 +32,12 @@ export default function RegisterPage() {
             setLoading(false);
         }
     }
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleSubmit();
+        }
+    };
     
     return (
         <div>
@@ -107,6 +113,7 @@ export default function RegisterPage() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="input-field"
+                                onKeyDown={handleKeyDown}
                             />
                             <button 
                                 className="show-btn"

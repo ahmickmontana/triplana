@@ -43,6 +43,12 @@ export default function AddActivityModal({ tripId, dayId, onClose, onActivityCre
         }
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleCreateActivity();
+        }
+    };
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal activity-modal" onClick={(e) => e.stopPropagation()}>
@@ -89,6 +95,7 @@ export default function AddActivityModal({ tripId, dayId, onClose, onActivityCre
                             value={endTime}
                             onChange={(e) => setEndTime(e.target.value)}
                             className={`input-field ${errors.endTime ? 'input-error-border' : ''}`}
+                            onKeyDown={handleKeyDown}
                         />
                         {errors.endTime && <p className="input-error">{errors.endTime}</p>}
                     </div>

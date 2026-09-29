@@ -1,7 +1,11 @@
 import Navbar from '../../components/Navbar';
+import { Map, AdvancedMarker, Polyline } from '@vis.gl/react-google-maps';
+import { decode } from '@googlemaps/polyline-codec';
 import { getTrip, getTripDays } from '../../api/tripApi';
 import { getActivities, deleteActivity } from '../../api/activityApi';
-import { useEffect, useState } from 'react';
+import { getAccommodations } from '../../api/accommodationApi';
+import { computeRoute } from '../../api/routingApi';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import './TripPlannerPage.css';
 import AddActivityModal from './AddActivityModal';
@@ -9,6 +13,7 @@ import EditActivityModal from './EditActivityModal';
 import ViewAccommodations from './ViewAccommodationsModal';
 import AddAccommodationModal from './AddAccommodationModal';
 import EditAccommodationModal from './EditAccommodationModal';
+import RouteSettingsModal from './RouteSettingsModal';
 
 
 export default function TripPlannerPage() {
@@ -17,15 +22,46 @@ export default function TripPlannerPage() {
     const [days, setDays] = useState([]);
     const [selectedDay, setSelectedDay] = useState(null);
     const [activities, setActivities] = useState([]);
+    const [selectedActivities, setSelectedActivities] = useState([]);
+    const [selectedActivityIds, setSelectedActivityIds] = useState([]);
 
     const [showAddActivityModal, setShowAddActivityModal] = useState(false);
     const [editingActivity, setEditingActivity] = useState(null);
     const [deletingActivityId, setDeletingActivityId] = useState(null);
 
+    const [accommodations, setAccommodations] = useState([]);
     const [viewingAccommodations, setViewingAccommodations] = useState(false);
     const [showAddAccommodation, setShowAddAccommodation] = useState(false);
     const [showEditAccommodation, setShowEditAccommodation] = useState(false);
     const [editingAccommodation, setEditingAccommodation] = useState(null);
+
+    const [route, setRoute] = useState(null);
+    const [canShowRoute, setCanShowRoute] = useState(false);
+    const [showRouteSettings, setShowRouteSettings] = useState(false);
+    const [includeAccommodation, setIncludeAccommodation] = useState(false);
+    const [routeSettings, setRouteSettings] = useState({
+        strategy: 'fastest',
+        travelMode: 'TRANSIT',
+        routingPreference: null,
+        allowedModes: ['BUS', 'SUBWAY', 'TRAIN', 'LIGHT_RAIL', 'DRIVE']
+    });
+    const [expandedSegments, setExpandedSegments] = useState([]);
+
+    const [routeError, setRouteError] = useState(null);
+
+    const toggleSegment = (index) => {
+        setExpandedSegments(prev => 
+            prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+        );
+    }
+
+    const currentAccommodation = accommodations?.find(a => {
+        const day = new Date(selectedDay.date);
+        const checkIn = new Date(a.checkInDate);
+        const checkOut = new Date(a.checkOutDate);
+        return day >= checkIn && day <= checkOut;
+    });
+    
 
     const sortedActivities = [
         ...activities.filter(a => a.startTime !== null).sort((a, b) => a.startTime.localeCompare(b.startTime)),
@@ -35,7 +71,6 @@ export default function TripPlannerPage() {
     useEffect(() => {
         const fetchTrip = async () => {
             const response = await getTrip(id);
-            console.log(response);
             setTrip(response.data);
         };
 
@@ -49,10 +84,49 @@ export default function TripPlannerPage() {
         fetchDays();
     }, [id]);
 
+    const fetchAccommodations = async () => {
+            const response = await getAccommodations(trip.id);
+            setAccommodations(response.data);
+        };
+
+    useEffect(() => {
+        if (!trip) return;
+        fetchAccommodations();
+    }, [trip]);
+
     useEffect(() => {
         if (!selectedDay) return;
         fetchActivities();
     }, [selectedDay]);
+
+    useEffect(() => {
+        setRoute(null);
+    }, [selectedActivityIds]);
+
+    useEffect(() => {
+        const eligible = selectedActivityIds.filter(actId => {
+            const a = sortedActivities.find(a => a.id === actId);
+            return a && a.latitude && a.longitude;
+        });
+        
+        const hasAccommodation = includeAccommodation && currentAccommodation?.latitude && currentAccommodation?.longitude;
+        
+        setCanShowRoute(eligible.length >= 2 || (eligible.length >= 1 && hasAccommodation));
+    }, [selectedActivityIds, activities, includeAccommodation, currentAccommodation]);
+
+    useEffect(() => {
+        const saved = localStorage.getItem(`triplana-route-settings-${id}`);
+        if (saved) {
+            setRouteSettings(JSON.parse(saved));
+        }
+    }, [id]);
+
+    useEffect(() => {
+        if (route) {
+            console.log('steps:', route.legs[0]?.steps);
+        }
+    }, [route]);
+
 
     const fetchActivities = async () => {
         if (!selectedDay) return;
@@ -117,11 +191,13 @@ export default function TripPlannerPage() {
     const handleAccommodationAdded = () => {
         setShowAddAccommodation(false);
         setViewingAccommodations(true);
+        fetchAccommodations();
     };
 
     const handleAccommodationUpdated = () => {
         setShowEditAccommodation(false);
         setViewingAccommodations(true);
+        fetchAccommodations();
     };
 
     const handleDelete = async (activityId) => {
@@ -137,6 +213,66 @@ export default function TripPlannerPage() {
         }
     }
 
+    const toggleActivity = async (activityId) => {
+        setSelectedActivityIds(prev =>
+            prev.includes(activityId)
+                ? prev.filter(id => id !== activityId)
+                : [...prev, activityId]
+        );
+    };
+
+    const handleShowRoute = async (overrideSettings = null) => {
+        const settings = overrideSettings || routeSettings
+        try {
+            let activitiesForRoute = sortedActivities
+                .filter(a => selectedActivityIds.includes(a.id) && a.latitude && a.longitude);
+
+            if (includeAccommodation && currentAccommodation?.latitude && currentAccommodation?.longitude) {
+                const accommodationStop = { 
+                    id: 'accommodation',
+                    title: currentAccommodation.name,
+                    locationName: currentAccommodation.locationName,
+                    latitude: currentAccommodation.latitude,
+                    longitude: currentAccommodation.longitude
+                };
+                activitiesForRoute = [
+                    { ...accommodationStop, id: 'accommodation-start' },
+                    ...activitiesForRoute,
+                    { ...accommodationStop, id: 'accommodation-end' }
+                ];
+            }
+
+            if (activitiesForRoute.length < 2) return;
+
+            const origin = activitiesForRoute[0];
+            const destination = activitiesForRoute[activitiesForRoute.length - 1];
+            const intermediates = activitiesForRoute.slice(1, -1).map(a => ({
+                latitude: a.latitude,
+                longitude: a.longitude
+            }));
+
+            const response = await computeRoute({
+                originLat: origin.latitude,
+                originLng: origin.longitude,
+                destLat: destination.latitude,
+                destLng: destination.longitude,
+                intermediates,
+                strategy: settings.strategy,
+                travelMode: settings.travelMode,
+                routingPreference: settings.routingPreference,
+                allowedTravelModes: settings.allowedModes
+            });
+
+            setRouteError(null);
+            setRoute(response.data);
+            setSelectedActivities(activitiesForRoute);
+            console.log("hi");
+        } catch (error) {
+            setRouteError('Unable to retrieve route.');
+            console.log(error.response?.data);
+        }
+    }
+
     const formatTime = (time) => {
         if (time === null) return;
         const hour = Number(time.slice(0, 2));
@@ -145,6 +281,37 @@ export default function TripPlannerPage() {
 
         return (hour > 12 ? (hour % 12) : hour) + ":" + minute + meridiem;
     }
+
+    const formatDuration = (durationStr) => {
+        const seconds = parseInt(durationStr.replace('s', ''));
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        
+        if (hours > 0) return `${hours}h ${minutes}min`;
+        return `${minutes}min`;
+    };
+
+    const getMainTravelMode = (leg) => {
+        if (!leg?.steps) return 'WALK';
+        const transitStep = leg.steps.find(s => s.travelMode !== 'WALK');
+        return transitStep?.travelMode || 'WALK';
+    };
+
+    const mapBounds = useMemo(() => {
+        const points = [
+            ...sortedActivities.filter(a => a.latitude && a.longitude),
+            ...(currentAccommodation?.latitude ? [currentAccommodation] : [])
+        ];
+        
+        if (points.length === 0) return null;
+        
+        return {
+            north: Math.max(...points.map(p => p.latitude)) + 0.01,
+            south: Math.min(...points.map(p => p.latitude)) - 0.01,
+            east: Math.max(...points.map(p => p.longitude)) + 0.01,
+            west: Math.min(...points.map(p => p.longitude)) - 0.01,
+        };
+    }, [sortedActivities, currentAccommodation, selectedDay]);
 
     if (!trip) return null;
 
@@ -166,9 +333,10 @@ export default function TripPlannerPage() {
                                                     onClose={() => setViewingAccommodations(false)}
                                                     onAddAccommodation={handleAddAccommodation}
                                                     onEditAccommodation={handleEditAccommodation}
+                                                    onAccommodationChanged={fetchAccommodations}
                 />}
 
-                 {showAddAccommodation && <AddAccommodationModal 
+                {showAddAccommodation && <AddAccommodationModal 
                                                     tripId={trip.id}
                                                     onClose={() => setShowAddAccommodation(false)}
                                                     onAccommodationAdded={handleAccommodationAdded}
@@ -190,6 +358,20 @@ export default function TripPlannerPage() {
                         onActivityEdited={fetchActivities}
                     />
                 )}
+
+                {showRouteSettings && (
+                <RouteSettingsModal
+                    tripId={id}
+                    onClose={() => setShowRouteSettings(false)}
+                    onConfirm={async (settings) => {
+                        setRouteSettings(settings);
+                        setShowRouteSettings(false);
+                        if (route) {
+                            await handleShowRoute(settings);
+                        }
+                    }}
+                />
+            )}
 
                 <div className="planner-header">
                     <div className="planner-header-info">
@@ -228,7 +410,7 @@ export default function TripPlannerPage() {
                             ) : (
 
                                 sortedActivities.map(activity => (
-                                    <>
+                                    <div key={activity.id}>
                                         {deletingActivityId === activity.id ? (
                                                 <div className="delete-activity-message activity-confirm-delete">
                                                     <p className="delete-title">Are you sure you want to delete this activity?</p>
@@ -240,6 +422,18 @@ export default function TripPlannerPage() {
                                                 </div>
                                                 ) : (
                                                     <div className="activity-content" key={activity.id}>
+                                                        <div className="activity-checkbox" title={!activity.latitude || !activity.longitude ? 'No location specified' : ''}>
+                                                            <input 
+                                                                className={`${!activity.latitude || !activity.longitude ? 'activity-route-checkbox-disabled' : 'activity-route-checkbox'}`}
+                                                                type="checkbox"
+                                                                id={`checkbox-${activity.id}`}
+                                                                checked={selectedActivityIds.includes(activity.id)}
+                                                                onChange={() => toggleActivity(activity.id)}
+                                                                disabled={!activity.latitude || !activity.longitude}
+                                                                title={!activity.latitude || !activity.longitude ? 'No location specified' : ''}
+                                                            />
+                                                            <label htmlFor={`checkbox-${activity.id}`} className="checkbox-label" />
+                                                        </div>
                                                         <div className="activity-items">
                                                             {activity.startTime && activity.endTime ? (
                                                                 <p className="activity-time">{formatTime(activity.startTime)} - {formatTime(activity.endTime)}</p>
@@ -266,7 +460,7 @@ export default function TripPlannerPage() {
                                                     </div>
                                                 )
                                             }
-                                        </>
+                                        </div>
                                 ))
                             )
                         }
@@ -276,10 +470,128 @@ export default function TripPlannerPage() {
                         </div>
                     </div>
                     <div className="trip-map">
-                        Map
+                        <Map
+                            {...(mapBounds ? { defaultBounds: mapBounds } : { defaultCenter: { lat: 20, lng: 0 }, defaultZoom: 2 })}
+                            style={{ width: '100%', height: '100%' }}
+                            gestureHandling="greedy"
+                            mapId="triplana-map"
+                        >
+                            {currentAccommodation?.latitude && currentAccommodation?.longitude && (
+                                <AdvancedMarker
+                                        position={{ lat: currentAccommodation.latitude, lng: currentAccommodation.longitude }}
+                                    >
+                                        <div className="accommodation-pin">🏠</div>
+                                    </AdvancedMarker>
+                            )}
+
+                            {sortedActivities
+                                .filter(a => a.latitude && a.longitude)
+                                .map((activity, index) => (
+                                    <AdvancedMarker
+                                        key={activity.id}
+                                        position={{ lat: activity.latitude, lng: activity.longitude }}
+                                    >
+                                        <div className={`activity-pin ${selectedActivityIds.includes(activity.id) ? 'activity-pin-selected' : ''}`}>
+                                            {index + 1}
+                                        </div>
+                                    </AdvancedMarker>
+                                ))
+                            }
+
+                            {route && (
+                                route.polylines?.length > 0 
+                                    ? route.polylines.map((poly, i) => (
+                                        <Polyline
+                                            key={i}
+                                            path={decode(poly).map(([lat, lng]) => ({ lat, lng }))}
+                                            strokeColor="#3B82F6"
+                                            strokeWeight={4}
+                                        />
+                                    ))
+                                    : route.encodedPolyline && (
+                                        <Polyline
+                                            path={decode(route.encodedPolyline).map(([lat, lng]) => ({ lat, lng }))}
+                                            strokeColor="#3B82F6"
+                                            strokeWeight={4}
+                                        />
+                                    )
+                            )}
+                        </Map>
                     </div>
                     <div className="trip-route">
-                        Route
+                        <div className="route-header">
+                            <button className="route-settings-btn" onClick={() => setShowRouteSettings(true)}>
+                                ⚙️
+                            </button>
+                        </div>
+                        {route ? (
+                            <div className="route-details">
+                                {selectedActivities.map((activity, index) => (
+                                    <div key={activity.id}>
+                                        <p className="route-activity-title">{activity.title}</p>
+                                        <div className="route-stop">
+                                            <p>📍{activity.locationName || activity.title}</p>
+                                        </div>
+                                        {index < selectedActivities.length - 1 && (
+                                            <div className="route-travel">
+                                                <div className="route-line"/>
+                                                <div className="route-segment" onClick={() => toggleSegment(index)}>
+                                                    <p>{route.legs[index]?.distanceText}</p>
+                                                    <p>•</p>
+                                                    <p>{route.legs[index] ? formatDuration(route.legs[index].duration) : ''}</p>
+                                                    <p>•</p>
+                                                    <p>{getMainTravelMode(route.legs[index])?.charAt(0).toUpperCase() + getMainTravelMode(route.legs[index])?.slice(1).toLowerCase()}</p>
+                                                    <p>{expandedSegments.includes(index) ? '▲' : '▼'}</p>
+                                                </div>
+                                                {expandedSegments.includes(index) && (
+                                                    <div className="route-steps">
+                                                        {route.legs[index]?.steps.map((step, stepIndex) => (
+                                                            <div key={stepIndex} className="route-step">
+                                                                <p className="step-instruction">{step.instructions}</p>
+                                                                {step.transitLine && <p>{step.transitLine} ({step.numStops} stops)</p>}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                <div className="route-line" />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : 
+                        <div className="route-details-empty">
+                            {routeError && (
+                                <div className="map-error">
+                                    <p className="route-error">{routeError}</p>
+                                </div>
+                            )}
+                            {routeError === null && (
+                                <p className="no-route">No route generated yet.</p>
+                            )}
+                        </div>}
+
+                        {routeError && (
+                            <div className="map-error">
+                                <p>{routeError}</p>
+                            </div>
+                        )}
+                        <div className="route-footer">
+                            <div className="accommodation-checkbox">
+                                <input 
+                                    className="activity-route-checkbox"
+                                    type="checkbox"
+                                    id="checkbox-accommmodation-id"
+                                    checked={includeAccommodation}
+                                    onChange={() => setIncludeAccommodation(!includeAccommodation)}
+                                />
+                                <label htmlFor="checkbox-accommmodation-id" className="checkbox-label"/>
+                                <p className="checkbox-label-text">Include Accommodation in Route?</p>
+                            </div>
+                            <button className="activity-btn-add" onClick={() => handleShowRoute()} disabled={!canShowRoute}>
+                                Show Route
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

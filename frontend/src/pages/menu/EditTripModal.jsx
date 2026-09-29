@@ -79,6 +79,12 @@ export default function EditTripModal({ trip, onClose, onTripUpdated }) {
         }
     }
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleTripUpdate();
+        }
+    };
+
     const handleRemoveImage = () => {
         setRemoveCoverImg(true);
         setCoverImg(null);
@@ -156,6 +162,7 @@ export default function EditTripModal({ trip, onClose, onTripUpdated }) {
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
                             className={`input-field ${errors.endDate ? 'input-error-border' : ''}`}
+                            onKeyDown={handleKeyDown}
                         />
                         {errors.endDate && <p className="input-error">{errors.endDate}</p>}
                     </div>

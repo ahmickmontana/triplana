@@ -3,7 +3,7 @@ import './AddActivityModal.css';
 import './ViewAccommodationsModal.css';
 import { getAccommodations, deleteAccommodation } from '../../api/accommodationApi.js';
 
-export default function ViewAccommodations({ tripId, selectedDay, onClose, onAddAccommodation, onEditAccommodation }) {
+export default function ViewAccommodations({ tripId, selectedDay, onClose, onAddAccommodation, onEditAccommodation, onAccommodationChanged }) {
     const [accommodations, setAccommodations] = useState([]);
     const [deletingAccommodationId, setDeletingAccommodationId] = useState(null);
 
@@ -30,7 +30,6 @@ export default function ViewAccommodations({ tripId, selectedDay, onClose, onAdd
 
     const fetchAccommodations = async () => {
         const response = await getAccommodations(tripId);
-        console.log(response);
         setAccommodations(response.data);
     };
 
@@ -42,6 +41,7 @@ export default function ViewAccommodations({ tripId, selectedDay, onClose, onAdd
     const handleDelete = async (accommodationId) => {
         try {
             await deleteAccommodation(tripId, accommodationId);
+            onAccommodationChanged();
             fetchAccommodations();
         } catch (error) {
             if (error.response?.data) {

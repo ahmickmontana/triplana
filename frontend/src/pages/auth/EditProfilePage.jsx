@@ -72,6 +72,12 @@ export default function EditProfilePage() {
             setLoading(false);
         }
     };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleSave();
+        }
+    };
     
     return (
         <div>
@@ -105,6 +111,7 @@ export default function EditProfilePage() {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 className={`input-field ${errors.username ? 'input-error-border' : ''}`}
+                                onKeyDown={handleKeyDown}
                             />
                             
                             <LoadingButton 

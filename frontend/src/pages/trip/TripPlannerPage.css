@@ -111,8 +111,7 @@
     align-items: center;
     height: 100%;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 1.5rem;
-    font-weight: bold;
+    font-size: 1rem;
 }
 
 .day-activity {
@@ -143,6 +142,11 @@
     background-color: #2563EB;
 }
 
+.activity-btn-add:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .activity-content {
     width: 100%;
     min-height: 25%;
@@ -170,6 +174,7 @@
 
 .activity-items {
     margin: 0.5rem;
+    margin-left: 0;
     overflow: hidden;
     word-break: break-word;
     min-width: 0;
@@ -259,11 +264,270 @@
     align-items: center;
 }
 
+.activity-pin {
+    background-color: #3B82F6;
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: bold;
+    font-size: 0.9rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.activity-pin-selected {
+    background-color: #F59E0B;
+}
+
+.accommodation-pin {
+    background-color: #10B981;
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: bold;
+    font-size: 0.9rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
 .trip-route {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 1px solid black;
+    overflow: hidden;
+    position: relative
+}
+
+.route-header {
+    display: flex;
+    justify-content: right;
+    align-items: center;
+    width: 100%;
+}
+
+.route-settings-btn {
+    font-size: 2rem;
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-right: 1rem;
+}
+
+.route-details {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow-y: auto;
+    flex: 1;
+    margin-top: 1rem;
+}
+
+.route-details > div {
+    width: 95%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.route-details-empty {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow-y: auto;
+    flex: 1;
+    margin-top: 1rem;
+}
+
+.route-error {
+    color: #dc2626;
+}
+
+.route-activity-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.route-stop {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.25rem;
+}
+
+.route-travel {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+    margin: 1.2rem;
+}
+
+.route-segment {
+    background-color: lightgray;
     width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    border-left: 1px solid black;
+    gap: 2rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.25rem;
+    cursor: pointer;
+}
+
+.route-segment:hover {
+    background-color: #BEBEBE;
+}
+
+.route-line {
+    width: 1px;
+    height: 3rem;
+    background-color: gray;
+    margin: 0 auto;
+}
+
+.route-footer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.accommodation-checkbox {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: center;
+}
+
+.accommodation-route-checkbox {
+    display: none;
+}
+
+.activity-checkbox {
+    display: flex;
+    align-items: center;
+    margin: 1rem;
+}
+
+.activity-route-checkbox {
+    display: none;
+}
+
+.checkbox-label {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid #3B82F6;
+    border-radius: 25%;
+    background-color: white;
+    cursor: pointer;
+    display: block;
+    position: relative;
+}
+
+.checkbox-label-text {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    margin-left: 1rem;
+}
+
+.checkbox-label:hover {
+    background-color: #3B82F6;
+}
+
+.activity-route-checkbox:checked + .checkbox-label {
+    background-color: #3B82F6;
+    border-color: #3B82F6;
+}
+
+.activity-route-checkbox:checked + .checkbox-label:hover {
+    background-color: #2563EB;
+    border-color: #2563EB;
+}
+
+.activity-route-checkbox:checked + .checkbox-label::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 1rem;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.activity-route-checkbox-disabled {
+    display: none;
+}
+
+.activity-route-checkbox-disabled + .checkbox-label {
+    border-color: #7c7d80;
+    background-color: #f1f5f9;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.route-steps {
+    padding: 0.5rem 1rem;
+    background-color: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.route-step {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.route-step:last-child {
+    border-bottom: none;
+}
+
+.route-step-icon {
+    font-size: 1.2rem;
+}
+
+.route-step-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.route-step-instruction {
+    font-size: 0.9rem;
+}
+
+.route-step-transit {
+    font-size: 0.8rem;
+    color: gray;
+}
+
+.step-instruction {
+    font-weight: bold;
 }

@@ -4,7 +4,7 @@ import { updateAccommodation } from '../../api/accommodationApi.js'
 import LocationDropdown from '../../components/LocationDropdown.jsx';
 
 
-export default function EditAccommodationModal({ tripId, accommodation, onClose, onAccommodationUpdated }) {
+export default function EditAccommodationModal({ tripId, accommodation, onClose, onAccommodationUpdated, onAccommodationChanged }) {
     const [accommodationName, setAccommodationName] = useState(accommodation.name || '');
     const [locationName, setLocationName] = useState(accommodation.locationName || '');
     const [checkInDate, setCheckInDate] = useState(accommodation.checkInDate || '');
@@ -32,6 +32,7 @@ export default function EditAccommodationModal({ tripId, accommodation, onClose,
             });
                         
             onAccommodationUpdated();
+            onAccommodationChanged();
             onClose();
 
         } catch (error) {
@@ -42,6 +43,12 @@ export default function EditAccommodationModal({ tripId, accommodation, onClose,
             setLoading(false);
         }
     }
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleUpdateAccommodation();
+        }
+    };
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -90,6 +97,7 @@ export default function EditAccommodationModal({ tripId, accommodation, onClose,
                             value={checkOutDate}
                             onChange={(e) => setCheckOutDate(e.target.value)}
                             className={`input-field ${errors.checkOutDate ? 'input-error-border' : ''}`}
+                            onKeyDown={handleKeyDown}
                         />
                         {errors.checkOutDate && <p className="input-error">{errors.checkOutDate}</p>}
                     </div>

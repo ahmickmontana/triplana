@@ -33,8 +33,6 @@ export default function LocationDropdown({ locationValue, onSelect, types = 'est
         const response = await getPlaceDetails(suggestion.placeId);
         const details = response.data;
 
-        console.log(details);
-
         onSelect({
             locationName: suggestion.mainText,
             latitude: details.latitude,

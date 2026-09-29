@@ -4,7 +4,7 @@ import { createAccommodation } from '../../api/accommodationApi.js'
 import LocationDropdown from '../../components/LocationDropdown.jsx';
 
 
-export default function AddAccommodationModal({ tripId, onClose, onAccommodationAdded }) {
+export default function AddAccommodationModal({ tripId, onClose, onAccommodationAdded, onAccommodationChanged }) {
     const [accommodationName, setAccommodationName] = useState('');
     const [locationName, setLocationName] = useState('');
     const [checkInDate, setCheckInDate] = useState('');
@@ -32,6 +32,7 @@ export default function AddAccommodationModal({ tripId, onClose, onAccommodation
             });
                         
             onAccommodationAdded();
+            onAccommodationChanged();
             onClose();
 
         } catch (error) {
@@ -42,6 +43,12 @@ export default function AddAccommodationModal({ tripId, onClose, onAccommodation
             setLoading(false);
         }
     }
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleAddAccommodation();
+        }
+    };
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -89,6 +96,7 @@ export default function AddAccommodationModal({ tripId, onClose, onAccommodation
                             value={checkOutDate}
                             onChange={(e) => setCheckOutDate(e.target.value)}
                             className={`input-field ${errors.checkOutDate ? 'input-error-border' : ''}`}
+                            onKeyDown={handleKeyDown}
                         />
                         {errors.checkOutDate && <p className="input-error">{errors.checkOutDate}</p>}
                     </div>

@@ -57,6 +57,12 @@ export default function ResetPasswordPage() {
         }
     }
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleSubmit();
+        }
+    };
+
     if (tokenValid === false) {
         return (
             <div>
@@ -122,6 +128,7 @@ export default function ResetPasswordPage() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="input-field"
+                                onKeyDown={handleKeyDown}
                             />
                             <button 
                                 className="show-btn"
